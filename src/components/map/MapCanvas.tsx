@@ -12,9 +12,11 @@ import {
 } from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
 import { Protocol } from 'pmtiles'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { Facility, LayerPreferences } from '../../types/facilities'
 
 const protocol = new Protocol()
+maplibregl.setWorkerUrl(maplibreWorkerUrl)
 maplibregl.addProtocol('pmtiles', protocol.tile)
 
 const vectorUrl = import.meta.env.VITE_VECTOR_PMTILES_URL
