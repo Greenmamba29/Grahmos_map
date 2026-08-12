@@ -10,10 +10,10 @@
 
 1. Build **Epic 1 (Grahm Bundle v1 schema) first**, because every other epic — resolver, install, facility truth, qualification — is a consumer of it, and it is the only P0 that can be finished without any upstream integration risk. Its schema and JSON Schema draft ship in this commit.
 2. Build **Epic 5's chaos harness second, not last.** "Prove it works with the cable pulled" must gate every merge from the first running service onward. Qualification as a final phase produces a demo; qualification as a merge gate produces a product.
-3. **The memo's core premise does not survive contact with the accessible repositories.** Across the nine public `Grahmos*` repos I could read, there is *zero* occurrence of Sahana, Valhalla, TerraNova, OSRM, Nominatim, CAP, IndoorGML, or indoor routing. The engines are *selected*, not *integrated*. Epic 3 is therefore the long pole, not a proof-of-assembly.
+3. **The memo's core premise is not supported by the repositories I could read.** Across nine public `Grahmos*` repos there is *zero* occurrence of Sahana, Valhalla, TerraNova, OSRM, Nominatim, CAP, IndoorGML, or indoor routing. That is a sample, not a census — the archive was unavailable and 115 repos went unread — but on the available evidence the engines are *selected*, not *integrated*, and Epic 3 should be planned as the long pole rather than a proof-of-assembly. Falsify cheaply by answering §0.1.
 4. Ship the bundle as an **`oci-layout` directory on removable media first, registry second.** An air-gapped hospital receives a USB drive, not a `docker pull`. OCI/ORAS is correct plumbing; registry-first sequencing is not.
 5. Use **keyed Cosign + TUF metadata, never keyless/Fulcio.** Verified: Sigstore offline verification still needs a locally provisioned `trusted_root.json` that goes stale with no offline refresh path — which defeats the entire thesis. Keys plus TUF expiry give you offline freshness and rollback defence with no network at verification time.
-6. **`gpos-by-grahmos` already contains ~70% of the *shape* of Facility Truth**: a deterministic kernel with separation-of-duties, threshold approvals, a tamper-evident hash-chained audit log, and offline outbox/sync — implemented and tested. Adapt it. Do not design Epic 4's governance core from zero.
+6. **`gpos-by-grahmos` implements the governance *shape* Epic 4 needs**: a deterministic kernel with separation-of-duties, threshold approvals, a tamper-evident hash-chained audit log, and offline outbox/sync, tested. What transfers is the kernel/proposal boundary and the audit chain; what does not is anything geospatial — per-fact-kind TTL, query-time expiry, and revision skew are new. Evaluate it as a starting point before committing to it.
 7. Treat existing repo documentation as **specification, not inventory.** `PACK_VERIFICATION_HARDENING.md` describes a complete minisign/TOFU verification pipeline whose source files do not exist on the default branch. This gap has already caused one false "done."
 8. The highest-severity risk is not staleness — it is **confident presentation of stale data**. That makes Answer Receipts and query-time expiry release gates, not P1 features.
 
@@ -39,7 +39,7 @@ Questions the archive would still answer, in priority order:
 
 ### 0.2 Verification of the memo's third-party claims
 
-I verified every third-party technical assertion in the memo. Three of them need correction or qualification, and the corrections are load-bearing.
+I checked each third-party technical assertion in the memo against a primary source. Three need correction or qualification, and the corrections are load-bearing. Claims about repository state elsewhere in this document (star counts, commit recency, release tags) come from the GitHub API at the verification date and are *not* independently reproducible from this document; treat them as observations with a timestamp, not as verified facts.
 
 | Memo claim | Verdict | Evidence |
 |---|---|---|
@@ -72,6 +72,8 @@ The memo's framing is: *"We are no longer missing another major 'Sahana' or 'Val
 | Indoor positioning is the biggest gap | Absent | **Confirms** |
 | CAP gateway needed | Absent. `infra/prometheus/rules/grahmos-alerts.yml` is service-health alerting, not emergency alerting | **Confirms** |
 
+**A note on this document's own standing.** R5 below, and constraint C4 in the agent protocol, say that documents are not evidence of code. That applies to this section too: the survey behind it is a set of assertions with file paths but no captured artefact or commit SHAs. A reader who wants to falsify §0.3 should re-run the survey rather than trust it. The claim it supports — that Epic 3 is the long pole — is consequential enough to be worth checking.
+
 **Two findings that *moot* or *reshape* memo items:**
 
 - **Facility Truth has a working precedent in-house.** `gpos-by-grahmos` implements a deterministic governance kernel (`backend/kernel.py`) with separation-of-duties, sequenced threshold approvals, an immutable hash-chained audit log, evidence lineage, and an offline outbox with sync — verified by its own test suite, with LLM output constrained to *proposals only* that the kernel validates. That is the exact governance shape Epic 4 needs, applied to a different domain. **Adapt it; do not redesign it.** This is the single highest-leverage discovery in the survey.
@@ -81,14 +83,16 @@ The memo's framing is: *"We are no longer missing another major 'Sahana' or 'Val
 
 ### 0.4 Assumptions (labelled, and used throughout)
 
+Assumption IDs are `ASM-n`. Acceptance-test IDs are `A<epic>.<n>` (e.g. `A4.7`). These were both `A1`–`A6` in an earlier draft, which made "assumption A4" and "test family A4.x" indistinguishable in prose.
+
 | ID | Assumption | Why it matters | How to falsify cheaply |
 |---|---|---|---|
-| **A1** | **TerraNova** = the internal maps/search/tiles layer, i.e. MapLibre + PMTiles + Meilisearch/SQLite-FTS as already present in `Grahmos`. No public repo by that name exists. | Determines Epic 3 scope | Answer the clarifying question in §10 |
-| **A2** | Team shape is **3–6 engineers**, not 30. Every sizing below assumes small-team sequencing with one person able to hold a whole epic. | Drives "one spec owner, no design-by-committee" | Confirm headcount |
-| **A3** | First target customer is a **single mid-size hospital or campus**, single building or small cluster, ORB-1/ORB-2 class hardware. | Drives ORB class priority and demo choice | Confirm pilot site |
-| **A4** | Hardware is **commodity x86-64 mini-PC**, not yet fixed to a SKU. | Bundles must express hardware requirements abstractly, not by SKU | Confirm procurement |
-| **A5** | Deployments are **air-gapped or intermittently connected**, and physical media (USB) is an acceptable delivery channel. | Justifies `oci-layout`-first over registry-first | Confirm site network policy |
-| **A6** | No requirement yet to support **ARM** ORBs. | Affects whether bundles must be multi-arch OCI indexes from day one | Confirm hardware roadmap |
+| **ASM-1** | **TerraNova** = the internal maps/search/tiles layer, i.e. MapLibre + PMTiles + Meilisearch/SQLite-FTS as already present in `Grahmos`. No public repo by that name exists. | Determines Epic 3 scope | Answer the clarifying question in §10 |
+| **ASM-2** | Team shape is **3–6 engineers**, not 30. Every sizing below assumes small-team sequencing with one person able to hold a whole epic. | Drives "one spec owner, no design-by-committee" | Confirm headcount |
+| **ASM-3** | First target customer is a **single mid-size hospital or campus**, single building or small cluster, ORB-1/ORB-2 class hardware. | Drives ORB class priority and demo choice | Confirm pilot site |
+| **ASM-4** | Hardware is **commodity x86-64 mini-PC**, not yet fixed to a SKU. | Bundles must express hardware requirements abstractly, not by SKU | Confirm procurement |
+| **ASM-5** | Deployments are **air-gapped or intermittently connected**, and physical media (USB) is an acceptable delivery channel. | Justifies `oci-layout`-first over registry-first | Confirm site network policy |
+| **ASM-6** | No requirement yet to support **ARM** ORBs. | Affects whether bundles must be multi-arch OCI indexes from day one | Confirm hardware roadmap |
 
 ---
 
@@ -108,8 +112,9 @@ A normative, versioned, machine-checkable description of a deployable continuity
 | 1.2 | Normative prose spec: semantics, media types, canonicalisation, conformance | `specs/grahm-bundle-v1.md` — **shipped in this commit** |
 | 1.3 | Capability vocabulary v1 — the controlled list of `cap:` identifiers with versioning rules | Section of 1.2, extracted later into the registry |
 | 1.4 | OCI layout mapping: how a `.grahm` becomes an OCI image manifest + referrers graph | Section of 1.2 |
-| 1.5 | Conformance corpus: ≥40 fixtures, valid and invalid, each invalid one annotated with the exact rule it violates | `spec/testdata/` |
-| 1.6 | `grahm-bundle-lint` behavioural specification (not the implementation) | Section of 1.2 |
+| 1.5 | Conformance corpus, each invalid fixture annotated with the exact rule it violates | `specs/conformance/` — **seeded in this commit**: 27 negative fixtures, all rejecting |
+| 1.6 | `grahm-bundle-lint` behavioural specification (not the implementation) | §8 of 1.2 |
+| 1.7 | Rule registry: every rule ID and whether the schema or the linter enforces it | §9 of 1.2 — **shipped**. Without it, schema validity reads as conformance |
 
 ### Interfaces and data contracts
 
@@ -122,10 +127,12 @@ metadata:      name, version(semver), title, vendor, description, created, licen
 capabilities:  provides[], requires[]          # cap: identifiers + semver ranges
 hardware:      uptime_class, ram, storage, cpu, accelerator, networking, power
 data:          datasets[]  { id, mediaType, digest, size, freshness, facilityRef }
-services:      components[] { id, image(digest-pinned), ports, health, resources,
-                              dependsOn, restartPolicy, degradedMode }
-policies:      offline{}, degradation{}, retention{}, breakGlass{}
-integrity:     digests{}, signatures[], sbom[], tuf{}
+services:      components[] { id, image(digest-pinned), ports, resources,
+                              storageEncryption, mounts, dependsOn,
+                              restartPolicy, degradedMode }
+policies:      offline{}, degradation{}, identity{}, retention{}, breakGlass{}
+integrity:     canonicalization, signatures[], trustAnchor{}, referrerIndex{},
+               sbom[], tuf{}, revocation_epoch_floor
 rollback:      supersedes[], dataCompat{}, hooks{}
 qualification: requiredTests[], minimumGrade, hardwareClassMatrix[]
 ```
@@ -134,20 +141,20 @@ qualification: requiredTests[], minimumGrade, hardwareClassMatrix[]
 
 ```
 cap:<domain>.<function>[.<qualifier>]@<major>
-  cap:routing.pedestrian.indoor@1
-  cap:routing.vehicle@1
-  cap:map.tiles.vector@1
-  cap:search.fulltext.offline@1
-  cap:geocode.forward@1
-  cap:incident.registry@1
-  cap:alert.cap.ingest@1
-  cap:alert.cap.emit@1
-  cap:facility.truth@1
-  cap:identity.offline.verify@1
-  cap:position.estimate@1
+  cap:routing.pedestrian@1          cap:facility.truth@1
+  cap:routing.pedestrian.indoor@1   cap:identity.offline.verify@1
+  cap:map.tiles.vector@1            cap:alert.cap.ingest@1
+  cap:search.fulltext.offline@1     cap:alert.cap.emit@1
+  cap:incident.registry@1           cap:position.estimate@1
 ```
 
-Rules: `@major` is the compatibility boundary; `provides` declares an exact version, `requires` declares a semver range; **all ranges must resolve to a pinned digest at build time** — a bundle contains no floating references.
+Rules: `@major` is the compatibility boundary; `provides` declares an exact version, `requires` declares a comparator range with no wildcards; **all ranges must resolve to a pinned digest at build time** — a bundle contains no floating references.
+
+**Qualifiers do not subsume** (spec rule B-205). `cap:routing.pedestrian.indoor@1` does not satisfy a requirement for `cap:routing.pedestrian@1`; a provider satisfying both must declare both. Left undefined, this is the resolver's core matching rule and two engineers build two incompatible resolvers whose difference is silent.
+
+`cap:geocode.forward@1` and `cap:routing.vehicle@1` appeared in an earlier draft and are **cut**: neither has a named consumer, an adapter, or a probe, which violates B-204 on the day B-204 was written. Readmit them with a consumer.
+
+**Credential scopes are not capability identifiers** (spec rule B-207). Scopes carry action verbs — `cap:facility.truth@1#approve` versus `#read` — because "may read facility facts" and "may approve a fire exit as verified" must not be the same token.
 
 ### Build vs. borrow vs. adapt
 
@@ -175,7 +182,8 @@ None. This epic is the root of the graph. It requires only a decision-maker who 
 |---|---|---|
 | A1.1 | Round-trip: author → OCI push → pull → verify | Byte-identical bundle digest |
 | A1.2 | **Air-gap round-trip**: build on host A → `oci-layout` tar → USB → import on network-namespaced host B with no route to anywhere | Verifies and reports identical digest with zero packets emitted |
-| A1.3 | Digest stability under key reordering, whitespace change, and unicode normalisation | Digest unchanged (JCS working) |
+| A1.3 | Digest stability under key reordering and whitespace change | Digest unchanged (JCS working) |
+| A1.3b | NFC and NFD forms of the same string | Digests **differ**. RFC 8785 §3.2.2.1 forbids normalisation; an earlier draft of this plan required them to match, which no conformant JCS implementation can do |
 | A1.4 | Referrers discovery on a registry **without** referrers API support | Falls back to tag schema; finds all signatures and SBOMs |
 | A1.5 | Lint over the invalid corpus | Every fixture rejected, each citing the specific rule ID — no generic "invalid" |
 | A1.6 | Rollback attack: present bundle v1.4.6 to a runtime that has seen v1.4.7 | Rejected, reason `E_ROLLBACK` |
@@ -195,7 +203,7 @@ None. This epic is the root of the graph. It requires only a decision-maker who 
 
 ### Open questions
 
-- Multi-arch OCI index from day one, or amd64-only? (Depends on **A6**.) Cheap now, expensive to retrofit.
+- Multi-arch OCI index from day one, or amd64-only? (Depends on **ASM-6**.) Cheap now, expensive to retrofit.
 - Does a bundle carry data, or reference an externally delivered dataset by digest? Recommendation: **both**, with `data.datasets[].delivery: inline|referenced`, because a 40 GB tile set should not be re-shipped for a config change.
 - Is `qualification.minimumGrade` advisory or enforcing at install time? Recommendation: **enforcing, with a signed, logged override** — anything weaker makes the grade cosmetic.
 
@@ -210,19 +218,23 @@ A single static binary that turns a verified bundle into a running, health-prove
 ### The pipeline, with the memo's diagram made executable
 
 ```
-  .grahm  ──▶  VERIFY ──▶ RESOLVE ──▶ PLAN ──▶ APPLY ──▶ HEALTH ──▶ QUALIFY ──▶ READY
-                 │           │          │        │         │           │
-              signature   hardware   signed   staged    capability   severed-
-              + TUF       + software  human-   then      probes,     network
-              + digests   + state     readable atomic    not port    suite
-                          inventory   artefact activate  checks
-                 │           │          │        │         │           │
-                 └───────────┴──────────┴────────┴─────────┴───────────┘
-                        every stage emits an audit record into the
-                        same hash-chained log; any stage can refuse
+  .grahm ─▶ VERIFY ─▶ RESOLVE ─▶ PLAN ─▶ STAGE ─▶ HEALTH ─▶ QUALIFY ─▶ ACTIVATE ─▶ READY
+              │         │         │        │        │          │           │
+           signature  hardware  signed  staged,  capability  severed-   atomic
+           + TUF      +software human-  nothing  probes,     network    pointer
+           + anchor   + state   readable serving not port    suite      swap
+           + digests  inventory artefact yet     checks                 │
+              │         │         │        │        │          │        │
+              └─────────┴─────────┴────────┴────────┴──────────┴────────┘
+                   every stage emits an audit record into the same
+                   hash-chained log; any stage can refuse
+                                                    │
+                          grade below minimum ──────┘  no ACTIVATE, auto-rollback
 ```
 
-**Two design decisions that differ from the memo's implied architecture:**
+**Qualification runs before activation, not after apply.** An earlier draft placed `QUALIFY` after `APPLY`, which made spec rule B-901 ("install halts below `minimumGrade`") incoherent: by the time the grade was known the system was already live, so the "halt" halted nothing. Splitting apply into `STAGE` and `ACTIVATE` gives the grade something to gate. The grade is earned **on the target hardware at the target site** — a vendor-attached grade from a different machine is exactly the meaningless artefact Epic 5 argues against.
+
+**Two further design decisions that differ from the memo's implied architecture:**
 
 1. **`verify`, `resolve`, and `plan` must run with no daemon and no container runtime.** They are pure functions over (bundle, inventory, state). A hospital IT department that forbids Docker must still be able to run `grahm plan` and read the output. The container runtime is an *apply backend*, pluggable: `docker` | `podman` | `systemd` | `nspawn`. The existing Electron installer's hard Docker dependency is a constraint to relax, not inherit.
 2. **`plan` emits a signed artefact before any mutation.** Change control in a hospital is not optional. `grahm plan -o plan.json` produces something a facilities director can read, approve, and archive — and `grahm install --plan plan.json` refuses to deviate from it.
@@ -256,9 +268,15 @@ PlanStep            { id, action: fetch|stage|migrate|activate|deactivate|prune,
                       target, preconditions[], postconditions[],
                       rollback_ref, reversible: bool }
 
-CapabilityProbe     { capability, probe_kind: functional,
-                      input, expected, timeout_ms, run_when: post_apply|periodic }
+CapabilityProbe     { kind: functional, request{method,path,body},
+                      expect{status, assertions[]}, timeout_ms,
+                      run_when: post_apply|periodic|pre_qualification,
+                      interval_seconds }   # required when periodic
 ```
+
+Probes live on `capabilities.provides[].probe`, not on components — a probe tests a *capability*, and a capability can outlive the component currently providing it.
+
+`interval_seconds` is required and capped for a specific reason: the interval is the window during which a service that has silently started returning empty routes is still reported healthy, and every answer produced inside that window carries a clean receipt. An unbounded interval makes A2.7 a one-shot check rather than a standing guarantee.
 
 **Health checks must be capability probes, not liveness checks.** `cap:routing.pedestrian.indoor@1` is healthy when *routing between two known fixture points returns a path of plausible length* — not when port 8002 accepts a TCP connection. A service that is listening and returning empty routes is the exact failure the product exists to prevent.
 
@@ -292,7 +310,9 @@ Requires Epic 1 §1.1, §1.2, §1.4 frozen. Can begin `inventory` and `plan` wor
 | A2.5 | Kill `apply` mid-write with power cut (simulated) | No torn state; staged content discarded; previous version still serving |
 | A2.6 | Rollback across a data-schema change with declared incompatibility | Refuses, names the incompatible migration |
 | A2.7 | Deceptive health: routing service up but returns empty routes | Capability probe **fails**; deployment does not reach READY |
-| A2.8 | Clock skewed 90 days forward | Refuses with `E_CLOCK_IMPLAUSIBLE`; does not silently treat valid signatures as expired |
+| A2.8 | Clock skewed forward beyond the declared tolerance | Enters degraded-honest mode per spec rule B-709: keeps serving, marks every receipt `clock_untrusted`, downgrades expiry-dependent claims to `unknown` |
+| A2.9 | Clock skewed **backward** past the monotonic high-watermark | Same. This is the dangerous direction — a rewind un-expires facts, credentials, grace windows, and TUF metadata |
+| A2.10 | Wipe the runtime state store, then present a superseded bundle | `E_STATE_RESET`, not silent acceptance. Re-imaging must not reset rollback protection to zero |
 
 ### Failure modes
 
@@ -326,7 +346,7 @@ A single `hospital.grahm` that installs and brings to READY an incident registry
 |---|---|---|
 | **Sahana Eden** — `sahana/eden` | **MIT** | Python on **web2py**, which is **LGPLv3** (verified). Brings its own DB abstraction (PyDAL), own auth, own UI. Active: v6.1 tagged 2026-01-13 with Python 3.13 fixes. **This is a whole application, not a library.** |
 | **Valhalla** — `valhalla/valhalla` | **MIT** | C++. Requires a **tile build** from OSM extracts — heavy, must run in CI, never on the ORB. Runtime integration itself is clean (HTTP service + tile directory). Active. |
-| **TerraNova** | Unknown | **No public repo found.** Under **A1** this is the MapLibre + PMTiles + Meilisearch/SQLite-FTS stack already partly present in `Grahmos`. |
+| **TerraNova** | Unknown | **No public repo found.** Under **ASM-1** this is the MapLibre + PMTiles + Meilisearch/SQLite-FTS stack already partly present in `Grahmos`. |
 
 **Recommendation, offered as alternatives because this is genuinely underdetermined:**
 
@@ -365,9 +385,18 @@ cap:routing.pedestrian.indoor@1
   POST   /route  {from{lat,lon,floor}, to{...}, profile, avoid[hazard_ids],
                   as_of}                      # as_of enables reproducible routes
         -> {path[], distance_m, duration_s, floors_traversed[],
-            facility_revision, confidence, degraded: bool, refusal?}
-  Invariant: MUST be able to return a refusal. "No verified safe route available"
-             is a valid, first-class response — never a fabricated path
+            facility_revision, revision_skew{}, confidence,
+            degraded: bool, refusal?}
+  Invariant 1: MUST be able to return a refusal. "No verified safe route
+               available" is a valid, first-class response — never a
+               fabricated path
+  Invariant 2 (spec rule B-406): MUST consult the Facility Truth store at
+               QUERY time for safety-relevant facts (exits, hazards) and
+               MUST NOT answer from prebuilt tiles alone when the tile
+               revision is behind the fact store. Without this invariant
+               the sealed-exit scenario survives the entire Facility Truth
+               system: tiles built at revision 7 still contain the corridor
+               that was sealed at revision 12
 
 cap:map.tiles.vector@1     GET /tiles/{z}/{x}/{y}  + /style.json  + /tilejson.json
 cap:search.fulltext.offline@1
@@ -405,6 +434,8 @@ Requires Epic 1 (schema) and Epic 2 (`plan`/`apply`/probes). Epic 4's Facility T
 | A3.6 | Delete the tile dataset | Health degrades honestly; no blank map presented as a valid map |
 | A3.7 | Whole-bundle cold boot on ORB-1 | Time-to-READY within a declared budget `[VERIFY: budget set at spec sign-off]` |
 
+**Blocking note:** the cold-boot budget is undeclared, and Q-20 and the grade-A rubric both depend on it. Until a number exists, **grade A is unevaluable**. Set it before Epic 5's rubric is signed, not after.
+
 ### Failure modes
 
 | Failure | Severity | Mitigation |
@@ -417,7 +448,7 @@ Requires Epic 1 (schema) and Epic 2 (`plan`/`apply`/probes). Epic 4's Facility T
 
 ### Open questions
 
-- **A1 (TerraNova)** must be answered before final scoping.
+- **ASM-1 (TerraNova)** must be answered before final scoping.
 - Does the pilot site's map need OSM-derived *outdoor* data at all, or is it purely indoor? Materially changes pipeline size.
 - Which language does the PWA talk to — the runtime, or the services directly? Recommendation: services directly for data-plane; runtime for status/receipts, so that a runtime restart never blackouts the map.
 
@@ -466,6 +497,12 @@ FacilityFact {
 
 `ttl_days` is **per fact kind**, not global: a fire exit's door status decays much faster than a corridor's geometry. That policy table is a deliverable and it is a safety artefact — it should be reviewed by the facilities director, not chosen by an engineer.
 
+**Three invariants the record alone does not give you:**
+
+3. **`confidence` is derived, never asserted.** It is a function of `state`, `source.kind`, and age — not a free field an importer can set. Without this rule, an importer can populate `verification.verified_at` from `source.imported_at` and a fact scraped from OSM renders in the UI as *"Verified 18h ago."* The `verified` value is reserved for a credentialed human physically confirming the fact; everything else is `reported` or `inferred` at best.
+4. **Break-glass MUST NOT write verification.** Encoded as `policies.breakGlass.may_write_facility_verification: false` (spec rule B-608). Otherwise an insider with physical access can re-verify the sealed exit through the very path provided for emergencies, and A4.7 — this epic's definition of done — is defeated by design rather than by a bug.
+5. **The audit chain needs an external anchor.** A hash chain detects editing *a* record; it does not detect rewriting the chain from genesis, which recomputes cleanly and erases every break-glass and grace use. The chain head must be periodically countersigned by the `facility_authority` key and anchored off-box (signed export, or a monotonic counter). `[VERIFY: mechanism.]` Without this, A4.3 passes against a naive implementation while the realistic attacker — the insider with physical access this plan names in §9 — succeeds.
+
 ### Part B — Offline identity and authority
 
 The hard constraint: **you cannot do online revocation offline.** Every workable design is a combination of four mechanisms, and the plan should say so rather than pretend one primitive solves it.
@@ -489,6 +526,12 @@ signature
 ```
 
 `offline_grace_seconds` is the field the memo is missing and the one that will be argued about most: it is where "fail secure" and "fail available" collide, and in a burning building the right answer is not obvious. Make it explicit, per-role, and signed by the issuer — so the trade-off is a recorded policy decision rather than an accident of implementation.
+
+**But grace must be bounded by the site, not by the credential.** A grace value carried only inside the credential means the credential decides how long it outlives itself, and one minted with a ten-year grace is honoured for ten years. The effective grace is therefore `min(credential.offline_grace_seconds, policies.identity.max_grace_seconds)` — the bundle carries the site's ceiling (spec rule B-606).
+
+**Revocation authority sits with the customer, not the vendor.** The bundle carries only a `revocation_epoch_floor`; the live epoch and the deny-list travel in a `facility_authority`-signed revocation feed (spec rule B-707). If the epoch lived only in the vendor-signed bundle, a hospital could not revoke a compromised badge offline without the vendor cutting a new release — which is not a revocation mechanism, it is a support ticket.
+
+**Key rotation and compromise recovery are in scope, and were missing from an earlier draft.** If the `bundle_author` key is compromised, every ORB in the field accepts attacker bundles, and the only recovery channel is physical delivery to air-gapped sites. `trustAnchor.keys[].supersedesKeyId` gives an offline ORB a rotation chain it can follow from a root it already trusts (spec rule B-706); the operational side — how a rotation reaches a disconnected site, and how fast — is an open question, not a solved one. See risk R14.
 
 **Credential format — genuinely underdetermined, presented as alternatives:**
 
@@ -525,12 +568,18 @@ Facility Truth's data model must precede indoor routing (Epic 3 indoor) and all 
 | A4.2 | Advance the clock past a fact's TTL, then query | Returned as `EXPIRED`/`stale`, still present, and the consuming answer changes wording |
 | A4.3 | Tamper with any audit record | Chain verification fails and names the first broken link |
 | A4.4 | Present a credential revoked by epoch bump | Denied offline, no network |
-| A4.5 | Present a credential expired by `offline_grace_seconds + 1` | Denied; within grace → allowed and logged as a grace-use |
-| A4.6 | Break-glass action | Succeeds, is time-boxed, appears in the audit chain, and surfaces in the next reconciliation report |
+| A4.5a | Credential expired beyond effective grace | Denied (`E_CREDENTIAL_EXPIRED`) |
+| A4.5b | Credential expired **within** effective grace | Allowed, logged as a grace-use |
+| A4.5c | Credential carrying a grace larger than the site ceiling | Ceiling wins |
+| A4.6 | Break-glass action | Succeeds, is time-boxed, appears in the audit chain, and increments the operational counter |
+| A4.6b | Break-glass attempts to write a facility `verification` record | **Refused** (B-608) |
 | A4.7 | **The sealed-exit scenario**: mark Exit A sealed 7 months ago; ask for nearest exit | Never routes through Exit A; if no alternative is verified, returns a refusal |
+| A4.7b | **Revision-skew variant**: Exit A sealed at fact-store revision 12, routing tiles built at revision 7 | Route is not computed on revision-7 geometry alone; receipt reports `revision_skew` |
 | A4.8 | Import the same IFC twice | Idempotent; no revision churn |
+| A4.9 | Importer attempts to set `confidence: verified` | Refused; `confidence` is derived, not asserted |
+| A4.10 | Rewrite the audit chain from genesis | Detected via the external anchor, not by chain self-consistency |
 
-**A4.7 is the epic's definition of done.** If it does not pass, nothing else in this epic matters.
+**A4.7 and A4.7b are the epic's definition of done.** A4.7 alone is insufficient: it passes if routing consults the fact store, and nothing in Epic 3's contract required that until B-406.
 
 ### Failure modes
 
@@ -538,7 +587,7 @@ Facility Truth's data model must precede indoor routing (Epic 3 indoor) and all 
 |---|---|---|
 | Stale data presented confidently | **Critical — the product's core safety risk** | A4.7 as a release gate; query-time expiry; refusal as a first-class response |
 | Approval theatre — one person holds all roles | High | SoD enforced in the kernel, not in UI; A4.1 |
-| Break-glass becomes the normal path | High | Rate-limit, time-box, and put grace/break-glass counts on the qualification report where an auditor sees them |
+| Break-glass becomes the normal path | High | Rate-limit and time-box. **Reporting it needs a second artefact:** the qualification report is a per-run harness output and structurally cannot show months of production usage, so grace and break-glass counts belong on a periodic **operational continuity report** signed by the `facility_authority`. An earlier draft named the qualification report here, which does not mitigate the risk it was attached to |
 | Credential lockout during a long outage | High — a safety risk in the *other* direction | Per-role `offline_grace_seconds`; explicit signed policy; tested in both directions |
 | TTL policy set by engineers rather than facilities | Medium | The TTL table is a signed, reviewed artefact owned by the customer |
 | Clock manipulation to extend credentials or freshness | High | Clock plausibility checks (shared with Epic 2); skew is a qualification test |
@@ -590,13 +639,32 @@ The memo's list, plus five conditions it omits that are the ones that actually b
 | Q-13 | Local routing | PASS |
 | Q-14 | Local search | PASS |
 | Q-15 | Incident capture + persistence across restart | PASS |
-| **Q-16** | **Expired facility data** | PASS *as degraded* — the answer's wording must change. Fails if the answer is unchanged |
-| **Q-17** | **Expired credential / revoked epoch** | Denied offline |
+| **Q-16** | **Expired facility data** | PASS *as degraded* — **structural criterion below, not a wording diff** |
+| **Q-17a** | **Credential expired beyond effective grace, or revoked epoch** | Denied offline |
+| **Q-17b** | **Credential expired within effective grace** | Allowed, logged as a grace-use |
+| **Q-21** | **Facility revision skew**: dataset built at an older revision than the fact store | Answer not computed on the stale dataset alone; receipt reports `revision_skew` |
+| **Q-22** | **Flapping / partial connectivity** (not just up/down) | No unverified data admitted while briefly online; assumption ASM-5 says intermittent is the normal case |
 | Q-18 | Partial service failure (each service killed in turn) | Remaining capabilities honest about what is lost |
 | Q-19 | Storage full | Graceful refusal, no corruption |
 | Q-20 | Cold boot time to READY | Within declared budget for the hardware class |
 
 **Q-08 and Q-16 are the two most valuable tests here.** Q-08 because clock skew silently invalidates every trust decision in a disconnected system, and Q-16 because it is the only test that mechanically enforces the memo's central safety argument.
+
+**Q-17 was one test in an earlier draft, and it contradicted A4.5.** "Expired credential → denied" and "expired within grace → allowed and logged" cannot both be satisfied by one assertion, so a correct implementation of Epic 4's central availability/security trade-off failed Epic 5's gate. Splitting it into Q-17a and Q-17b tests both directions, which is what the trade-off actually requires.
+
+#### Q-16's pass criterion must be structural, not textual
+
+An earlier draft said "the answer's wording must change; fails if the answer is unchanged." That is satisfiable forever, on every input, by appending a timestamp to every answer. The most important assertion in the suite would have been a string diff.
+
+Q-16 passes only when **all** of the following hold on the expired-data query:
+
+1. `receipt.freshness.breached == true`
+2. `receipt.answer_kind ∈ {degraded_answer, refusal}` — never `answer`
+3. The rendered answer text **contains the age of the oldest contributing source**
+4. `receipt.sources[].confidence` for the expired fact is `stale`, not `verified`
+5. The *same query against fresh data* yields `answer_kind == answer` and `breached == false` — so the mechanism is responsive to the input, not unconditional
+
+Criterion 5 is what defeats the timestamp trick: an implementation that always degrades fails just as surely as one that never does.
 
 ### The report — and one correction to the memo
 
@@ -621,12 +689,24 @@ GRAHM CONTINUITY QUALIFICATION
 
 **Grading rubric (normative sketch — must be fixed at spec sign-off):**
 
+**The disqualifying set** — failing any of these is grade **F**, with no partial credit:
+
+- Any REJECT test (Q-09 corrupt, Q-10 stale, Q-11 unauthorised, Q-12 rollback) fails to reject
+- Q-16 (stale-data honesty) fails
+- Q-17a fails — a system that honours a revoked credential offline
+- Q-21 fails — a system that answers from a dataset behind the fact store without saying so
+- **Reporting is incomplete anywhere.** Degradation the system does not report is the honesty failure, not a lesser grade
+
 | Grade | Criteria |
 |---|---|
-| **A** | All REJECT tests reject; all PASS tests pass; Q-16 degrades correctly; cold boot within budget |
-| **B** | All REJECT tests reject; ≤2 PASS tests degrade gracefully with honest reporting |
-| **C** | All REJECT tests reject; degradation present but reporting incomplete |
-| **F** | **Any** REJECT test fails to reject, **or** Q-16 fails. No partial credit — a system that accepts an unauthorised bundle or lies about stale data has no grade |
+| **A** | Nothing in the disqualifying set fails; all PASS tests pass; cold boot within budget |
+| **B** | Nothing disqualifying fails; ≤2 PASS tests degrade, **each honestly reported** |
+| **C** | Nothing disqualifying fails; ≥3 PASS tests degrade, each honestly reported. Also the ceiling for `wan_required` bundles (B-601) and for `enforcement: advisory` (B-904) |
+| **F** | Anything in the disqualifying set |
+
+**Correction to an earlier draft:** grade C was defined as "degradation present but reporting incomplete" while the same section claimed "integrity and honesty failures are disqualifying." Those contradict — incomplete reporting *is* the honesty failure. A bundle could have shipped, installed under `enforcement: enforcing`, and carried a signed qualification report while known to under-report degradation. C now means *more* degradation, honestly reported; it never means less honesty.
+
+**The mandatory test floor closes the other hole.** `qualification.requiredTests` is bundle-authored, so a bundle declaring `requiredTests: ["Q-01"]` would satisfy grade A vacuously — no REJECT tests in its set to fail, Q-16 not in its set. Spec rule B-903 makes Q-08, Q-09–Q-12, Q-16, and Q-17a/b mandatory in every bundle regardless of hardware class, and the schema now rejects a bundle that omits them.
 
 The asymmetry is deliberate: integrity and honesty failures are disqualifying, availability failures are gradeable.
 
@@ -644,7 +724,7 @@ The asymmetry is deliberate: integrity and honesty failures are disqualifying, a
 | ID | Test | Pass criterion |
 |---|---|---|
 | A5.1 | Run against the negative-control bundle | Grade F, with the specific failing test IDs named |
-| A5.2 | Verify severance is real | Packet counter on the severed interface is zero for the duration |
+| A5.2 | Verify severance is real | Packet counters on **every** interface on the host — not only the one unplugged — are zero for the duration. A second NIC, an LTE modem, or Wi-Fi makes a single-interface counter meaningless, and the entire commercial claim rests on this measurement |
 | A5.3 | Re-run the identical suite twice | Identical grade; flake rate under a declared threshold |
 | A5.4 | Report tamper | Signature verification fails |
 | A5.5 | Run on a hardware class below the bundle's declared minimum | Reports class mismatch rather than a misleading grade |
@@ -709,32 +789,66 @@ The most distinctive user-visible feature, and the mechanical enforcement of the
 
 ```
 AnswerReceipt {
+  receipt_id, answer_digest,          # binds THIS receipt to THAT answer
   claim, answer_kind: answer|degraded_answer|refusal,
-  sources[{kind, id, facility_revision, verified_at, confidence}],
+
+  sources_used[{kind, id, facility_revision, verified_at, confidence}],
+  sources_expected[],                 # what the query needed
+  coverage: complete|partial,         # partial when expected ⊄ used
+  revision_skew{dataset_rev, factstore_rev, behind_by},
+
   engines[{capability, provider, version, bundle_digest}],
   freshness{oldest_source_age_s, policy_threshold_s, breached: bool},
-  degradation{wan: up|down, services_degraded[]},
-  generated_at
+  degradation{wan: up|down, services_degraded[], envelope_exceeded: bool},
+  clock_untrusted: bool,
+
+  generated_at, signature
 }
 ```
 
+Four fields were absent from an earlier draft and each closes a concrete path to a clean receipt over an unfounded answer:
+
+- **`sources_expected` / `coverage`.** Delete the tile dataset (test A3.6) and search still answers from the index. A receipt listing only what it *used* computes freshness over exactly those sources and reports `breached: false`. An answer derived from one of three expected inputs then carries a receipt that reads as a completeness attestation. A receipt that is honest about what it saw and silent about what it missed is not honest.
+- **`revision_skew`.** Per spec rule B-406 — without it, a route computed on revision-7 tiles is attributed to whatever revision the receipt happens to report.
+- **`clock_untrusted`.** Per spec rule B-709. If expiry cannot be evaluated, saying so is the only honest option.
+- **`answer_digest` + `signature`.** Nothing previously bound a receipt to an answer, so a client could render answer text beside a receipt generated for a different query. "The runtime generates the receipt" constrains *who composes it*, not whether the pairing is verifiable. An unsigned, unidentified receipt is also unusable as the liability evidence §9 wants it to be — despite `policies.retention.receipt_days` existing to retain it.
+
+Other invariants:
+
 - **`refusal` is a first-class `answer_kind`.** "No verified safe route available" must be as easy to produce as an answer, and must be produced automatically when the sources fail the freshness policy — not left to a UI decision.
-- The receipt is generated by the runtime from the capability responses, **not** composed by the UI. A UI-composed receipt is a UI that can be persuaded to lie.
-- This is also the natural place for the LLM boundary, and the GPOS precedent applies directly: **models propose, the kernel decides.** No model output reaches a user without a receipt derived from verified capability responses.
+- **The receipt is generated by the runtime from the capability responses**, not composed by the UI.
+
+### The rendering contract — nobody owned this, and it is where the claim holds or fails
+
+R1 is about *confident presentation*. A receipt that correctly reports `breached: true`, rendered in small grey text under a large confident route line, satisfies every rule above and realises the risk anyway. No epic owned the client, and the existing PWA was treated as an inherited asset rather than as the surface where the safety claim lives.
+
+**Added deliverable (Epic 4 scope):** a normative **rendering contract** stating what a conformant client MUST do with each `answer_kind`, what it MUST display for `coverage: partial`, `clock_untrusted`, and `revision_skew`, and what prominence those carry relative to the answer. Plus a client conformance test that inspects rendered output, not just the receipt. Without it, "GrahmOS does not present stale data confidently" is a property of the runtime and not of the product.
+
+### The LLM boundary — stated honestly
+
+An earlier draft resolved this in one sentence: *"models propose, the kernel decides; no model output reaches a user without a receipt."* Attaching a receipt to generated prose constrains nothing about the prose. Nothing verifies that a natural-language answer is *entailed* by the sources the receipt lists, and no epic, contract, or test covered grounding.
+
+**v1 position:** on the safety path — routing, exits, hazards, facility facts — answers are **templated from structured capability responses**, not free-form generated. A model may rank, reformulate a query, or summarise non-safety content; it may not author a safety answer. Free-form generation on the safety path is deferred until there is a grounding check with a test behind it, and until then this is an open problem, not a solved one. See risk R16.
 
 ### ORB hardware classes
 
 Define as **testable profiles**, each with a qualification baseline, not as a marketing ladder.
 
-| Class | Shape | Qualification baseline |
+**Every class runs the mandatory floor** — Q-08, Q-09–Q-12, Q-16, Q-17a/b, Q-21 — regardless of hardware. An earlier draft's baselines omitted all four REJECT tests and Q-08 from every class, which meant an ORB-0 device could be graded without a single integrity test while the rubric simultaneously defined grade A as "all REJECT tests reject." The baselines below are *additive to the floor*, never a substitute for it.
+
+| Class | Shape | Floor **plus** |
 |---|---|---|
-| ORB-0 | Single device | Q-01…Q-04, Q-13…Q-16 |
+| ORB-0 | Single device | Q-01…Q-04, Q-13…Q-15, Q-22 |
 | ORB-1 | Mini PC + SSD + LAN/Wi-Fi | + Q-06, Q-19, Q-20 |
-| ORB-2 | Redundant storage + UPS + dual networking | + Q-07, Q-05 |
+| ORB-2 | Redundant storage + UPS + dual networking | + Q-07, Q-05, Q-18 |
 | ORB-3 | Multiple nodes + mesh + failover | + node-loss failover |
 | ORB-X | Rugged / vehicle / remote | + environmental `[VERIFY: env spec]` |
 
-A class is only real once the harness can *detect* it and the rubric can *grade against* it. Until then it is a label.
+**Classes must be detectable, and detection must not be spoofable by a dead component.** `power.ups_present: true` is satisfied by a UPS with a failed battery — a host would then claim ORB-2 and earn a grade A against a power-cut test the site cannot actually survive. Hence `hardware.power.ups_health_required` (spec rule B-304): for ORB-2 and above the runtime must observe battery health, not presence.
+
+Ordering is `ORB-0 < ORB-1 < ORB-2 < ORB-3` for satisfaction. **ORB-X is not ordinal** — a bundle requiring ORB-X is satisfied only by ORB-X, because "rugged/vehicle" is a different axis from "redundant."
+
+A class is only real once the harness can detect it and the rubric can grade against it. Until then it is a label.
 
 ### Global Capability Registry
 
@@ -818,13 +932,23 @@ A class is only real once the harness can *detect* it and the rubric can *grade 
 
 ## 7. Smallest credible demo — "The Unplugged Floor"
 
+### The earlier proof point — "Refuses the Bad Disk"
+
+The full demo below needs indoor routing, receipts, and a signed report — effectively the whole plan. It is the *first convincing* demo, not the smallest one. There is a smaller milestone worth naming, reachable after sequence step 4:
+
+> On a machine with no network route, `grahm install` a valid bundle and reach READY. Then present three doctored bundles from a USB stick: one corrupt, one signed by an untrusted key, one a downgrade. Each is refused by name, at `plan`, before a byte is unpacked. Then skew the clock back sixty days and watch the runtime say so rather than quietly re-trusting expired metadata.
+
+It proves the trust architecture end to end with no engines, no facility data, and no UI — and it is the piece most likely to be assumed working and never checked.
+
+### The full demo
+
 **One building. One ORB-1. One `hospital.grahm`. One witness who physically pulls the cable.**
 
 Under ninety seconds, on a phone in airplane mode with no SIM, with the ORB's WAN uplink physically disconnected by someone in the room:
 
 | # | Action | What it proves | Epic |
 |---|---|---|---|
-| 1 | Witness unplugs the WAN cable. Harness shows the packet counter at zero. | The severance is real, not simulated | 5 |
+| 1 | Witness unplugs the WAN cable. Harness shows packet counters at zero on **every** interface, not just the unplugged one. | The severance is real, not simulated | 5 |
 | 2 | Search "nearest AED" → result appears | Offline search works | 3 |
 | 3 | Result carries a receipt: *"Local facility map · Verified 18h ago · Routing engine local"* | Provenance, not just an answer | 4 + Receipts |
 | 4 | Request a route → walking path across two floors | Offline indoor routing | 3 + 4 |
@@ -835,13 +959,15 @@ Under ninety seconds, on a phone in airplane mode with no SIM, with the ORB's WA
 
 **Step 7 is the demo.** Steps 1–6 show an offline system; plenty of things are offline systems. Step 7 shows a system that knows the difference between what it knows and what it used to know — which is the thing nobody else is selling.
 
+Note that step 7 is only convincing if the *same query against fresh data* answers normally. A system that always hedges is as useless as one that never does, and it would pass a naive reading of the test. That symmetry is why Q-16's pass criterion includes the fresh-data control.
+
 **Scope discipline:** no positioning, no CAP, no IndoorGML, no multi-node, no mesh, one facility, one floor pair, one bundle. Every one of those additions makes the demo longer and none makes it more convincing.
 
 ---
 
 ## 8. Staffing and effort shape
 
-Sizing is expressed as *scope, invasiveness, and risk* — not calendar time (**A2**: 3–6 engineers).
+Sizing is expressed as *scope, invasiveness, and risk* — not calendar time (**ASM-2**: 3–6 engineers).
 
 | Epic | Roles needed | Invasiveness | Dominant risk |
 |---|---|---|---|
@@ -866,7 +992,7 @@ The memo is right that these must start before the architecture spreads across t
 |---|---|---|
 | **Trademark** | Clear and file the marks that carry the category: Grahm Bundle, Grahm Runtime, Grahm Qualification, Grahm Facility Truth, ORB. Decide which names are *marks* and which are *spec terms* — a spec term you want others to adopt cannot also be an enforced mark | Names are baked into media types (`application/vnd.grahmos.*`) and capability IDs. Renaming after Epic 1 is a breaking change |
 | **Patent / prior-art** | Prior-art search **before** filing, specifically on: capability-resolved offline deployment bundles, continuity grading, and provenance-scored offline answers. Note: public repos already state **"Patents pending"** and publish an enterprise price band — verify those public disclosures against filing strategy | An unsearched claim area can force a redesign after implementation |
-| **License inventory** | Verified findings in [`upstream/OPEN_SOURCE_REGISTRY.md`](upstream/OPEN_SOURCE_REGISTRY.md). Headline: engines are permissive (Valhalla MIT, Eden MIT, PMTiles BSD-3, MapLibre BSD-3, ORAS/cosign/go-tuf/zot Apache-2.0), **but Sahana Eden runs on web2py, which is LGPLv3** — the one real copyleft exposure found. Its own license text expressly permits releasing applications under any license and redistributing web2py alongside them, so the exposure is manageable, but it must be tracked, and modifications to web2py itself carry obligations | Determines whether Eden ships as a separate process (clean) or is linked in (not clean). Reinforces option **3-A**, black-box service |
+| **License inventory** | Verified findings in [`upstream/OPEN_SOURCE_REGISTRY.md`](upstream/OPEN_SOURCE_REGISTRY.md). **Two exposures, and the second is the bigger one.** (1) Engines are permissive (Valhalla MIT, Eden MIT, PMTiles BSD-3, MapLibre BSD-3, ORAS/cosign/go-tuf/zot Apache-2.0), but Eden runs on **web2py, which is LGPLv3** — manageable if Eden ships unmodified as a separate process. (2) **OSM data is ODbL 1.0**, a share-alike *database* licence whose attribution and derived-database duties attach directly to the tiles, routing tiles, and indexes the product packages, signs, and sells. An earlier version of this plan called web2py "the only real copyleft exposure," which was wrong by omission: the licence binding the shipped datasets was missing from the inventory | Determines whether Eden ships as a separate process (clean) or is linked in (not clean) — reinforces option **3-A**. ODbL attribution lands in the rendering contract, and derived-database duties need counsel review before distribution |
 | **Security threat model** | STRIDE over: bundle authorship, distribution media, install, offline credential, break-glass, facility approval, answer generation. Explicitly include the **insider with physical access**, which is the realistic ORB threat | Directly produces Epic 5 test IDs and Epic 4 invariants |
 | **Upstream contribution policy** | Written policy: contribute fixes upstream by default; never fork silently; pin digests; a local patch requires a filed upstream issue | Prevents the divergence that upstream compatibility automation exists to catch |
 | **Commercial packaging** | Decide early whether the **qualification report is third-party auditable** — it changes how much of the rubric and harness can stay proprietary. Also settle bundle-vs-seat-vs-site pricing, because it determines whether multi-bundle-per-ORB is a v1 requirement | Both are schema-visible in Epics 1 and 5 |
@@ -893,7 +1019,17 @@ Severity: **S1** catastrophic (harm or total loss of trust) · **S2** major · *
 | **R10** | Monorepo debt (two divergent edge APIs, broken prod compose path, 25+ dangling submodules) silently consumes Epic 3 | **S3** | High | Scheduled as deliverable 3.4, not treated as incidental | Epic 3 |
 | **R11** | IndoorGML export built against an unpublished encoding, then rebuilt when Part 2 lands | **S3** | Medium | Conceptual alignment now, encoder later; import prioritised | IndoorGML |
 | **R12** | Names embedded in media types and capability IDs before trademark clearance | **S3** | Medium | Clear marks before Epic 1 sign-off — the cheapest it will ever be | Non-technical |
-| **R13** | Grade inflation under commercial pressure hollows out the qualification claim | **S2** | Medium | Versioned signed rubric; F non-negotiable on integrity and honesty failures; consider third-party auditability | Epic 5 |
+| **R13** | Grade inflation under commercial pressure hollows out the qualification claim | **S2** | Medium | Versioned signed rubric; mandatory test floor (B-903) so a bundle cannot select its own exam; F non-negotiable on integrity and honesty failures; consider third-party auditability | Epic 5 |
+| **R14** | **Signing-key compromise with no recovery path.** A compromised `bundle_author` key means every ORB in the field accepts attacker bundles, and the only recovery channel is physical delivery to air-gapped sites | **S1** | Low likelihood, catastrophic impact | Rotation chain via `supersedesKeyId` (B-706); hardware-backed keys; threshold signing for release; a written, rehearsed rotation runbook that assumes sneakernet. **The operational half is unsolved** | Epic 1 |
+| **R15** | **Audit-chain rewrite and state reset.** A hash chain detects editing one record; rewriting from genesis recomputes cleanly. Wiping the runtime state store silently resets anti-rollback protection to zero | **S1** | Medium — the realistic insider attack | External anchoring of the chain head countersigned by `facility_authority`; monotonic counter or signed checkpoint (B-102); `E_STATE_RESET`; tests A2.10 and A4.10 | Epics 2, 4 |
+| **R16** | **Ungrounded generated answers.** Attaching a receipt to model-generated prose does not make the prose entailed by the sources | **S1** | High if free-form generation ships on the safety path | v1 restricts safety-path answers to templates over structured capability responses; free-form generation deferred pending a grounding check with a test behind it | Receipts |
+| **R17** | **Verified-but-wrong facility data.** The provenance model authenticates the *attester*, not the *fact*. A mis-surveyed exit is fresh, verified, approved, and lethal — the system's most confident state is the one it cannot check | **S1** | Medium | Independent re-survey cadence for life-safety facts; two-person verification for exits; cross-checks against IFC geometry; `confidence` derived rather than asserted. **No mechanism fully closes this** — it is a residual risk to be stated, not engineered away | Epic 4 |
+| **R18** | **Insider with physical access to the ORB.** Named in §9's threat-model scope but previously absent from this register. Owns the clock, the disks, the audit log, and the UPS status | **S1** | Medium | Encryption at rest (B-504); anti-rewind (B-710); external audit anchoring (R15); tamper-evident enclosure `[VERIFY]`; threat model as a scheduled deliverable, not a workstream note | Epics 2, 4 |
+| **R19** | **PHI and personal data on a stealable box.** The incident registry holds reporter identity and incident detail in a hospital; Eden carries a person model. Previously no encryption requirement, no retention ceiling, no privacy row | **S1** | High | `storageEncryption: required` (B-504) for incident/credential/audit components; retention ceilings in the schema; data-minimisation review with the customer; privacy counsel before pilot | Epic 3 |
+| **R20** | **Over-refusal as an availability attack.** R4 covers credential lockout; an attacker who expires the *data* converts the safety mechanism into a refusal machine during an emergency | **S2** | Medium | Refusal rate is a monitored signal; expired facts are demoted and still shown with explicit staleness rather than withheld; manual override with audit | Epic 4 |
+| **R21** | **Life-safety regulatory exposure.** An evacuation-routing product in a hospital touches fire code and fire-marshal sign-off. §9 raised this in prose with no owner | **S2** | High | Documented failure-to-safe behaviour; qualification report designed as regulator-facing evidence; engage the authority having jurisdiction before the pilot, not after | Non-technical |
+| **R22** | **Dataset licence obligations.** OSM data is ODbL 1.0, a share-alike *database* licence with attribution and derived-database duties that attach to the tiles, routing tiles, and indexes GrahmOS packages, signs, and sells. This was missing from the first license inventory | **S2** | **Certain if OSM is used** | `provenance.source_license` on every dataset (B-404); attribution surfaced in the rendering contract; counsel review of derived-database duties before distribution | Epic 3 |
+| **R23** | **Poisoned upstream data.** A tampered OSM extract yields routing tiles that are signed, digest-pinned, fresh, and completely wrong. The threat model covered bundle authorship and media, not ingestion | **S2** | Medium | Signed build attestation binding source digest to dataset digest (B-405); `E_ATTESTATION_MISSING`; pin and verify upstream extract digests | Epic 3 |
 
 ---
 
@@ -923,15 +1059,15 @@ Severity: **S1** catastrophic (harm or total loss of trust) · **S2** major · *
 
 **The one clarifying question, because it changes Epic 3's scope by roughly a third:**
 
-> **What is TerraNova, concretely?** A repository, a vendor product, or an internal name for the MapLibre + PMTiles + Meilisearch/SQLite-FTS layer already partly present in `Greenmamba29/Grahmos`? No public repository by that name was findable. Under assumption **A1** I have planned it as the latter; if it is a distinct third engine, Epic 3 gains an integration, a license entry, and a capability contract.
+> **What is TerraNova, concretely?** A repository, a vendor product, or an internal name for the MapLibre + PMTiles + Meilisearch/SQLite-FTS layer already partly present in `Greenmamba29/Grahmos`? No public repository by that name was findable. Under assumption **ASM-1** I have planned it as the latter; if it is a distinct third engine, Epic 3 gains an integration, a license entry, and a capability contract.
 
-Proceeding on **A1** in the meantime — nothing in Epics 1, 2, 4, or 5 depends on the answer.
+Proceeding on **ASM-1** in the meantime — nothing in Epics 1, 2, 4, or 5 depends on the answer.
 
 **Remaining open questions, by epic:**
 
 | Epic | Question | Default if unanswered |
 |---|---|---|
-| 1 | Multi-arch OCI index from day one? | amd64-only (**A6**), documented as a known migration |
+| 1 | Multi-arch OCI index from day one? | amd64-only (**ASM-6**), documented as a known migration |
 | 1 | SBOM format: CycloneDX or SPDX? | `[VERIFY: decide at spec sign-off]` |
 | 1 | Is `minimumGrade` enforcing at install? | Enforcing, with a signed logged override |
 | 2 | Multiple concurrent bundles per ORB? | One active bundle set, additive capabilities |
@@ -947,7 +1083,7 @@ Proceeding on **A1** in the meantime — nothing in Epics 1, 2, 4, or 5 depends 
 ## 13. What a competent engineering lead does first
 
 1. Read [`specs/grahm-bundle-v1.md`](specs/grahm-bundle-v1.md) and [`specs/grahm-bundle-v1.schema.json`](specs/grahm-bundle-v1.schema.json). Name **one** owner for the schema, with veto.
-2. Answer the TerraNova question (§12) and confirm **A2/A3/A4** (team, pilot site, hardware).
+2. Answer the TerraNova question (§12) and confirm **ASM-2 / ASM-3 / ASM-4** (team, pilot site, hardware).
 3. Freeze the capability vocabulary. Every identifier must have a named consumer in Epic 2 or 3, or it is cut.
 4. Build the conformance corpus **before** the linter. Fixtures are the spec's test suite; a linter written first will encode its own bugs as behaviour.
 5. In parallel, stand up the Epic 5 harness skeleton and prove severance is real (A5.2) against *anything* — even a hello-world service. That capability, once it exists, gates everything that follows.
