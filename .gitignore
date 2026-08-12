@@ -6,3 +6,4 @@ dev-dist
 *.pmtiles
 !public/tiles/.gitkeep
 .DS_Store
+*.tsbuildinfo
