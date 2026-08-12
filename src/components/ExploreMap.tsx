@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import maplibregl, { type LngLatLike, type Map as MapLibreMap, type Marker } from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import type { LngLatLike, Map as MapLibreMap, Marker } from 'maplibre-gl';
 import { Navigation, Phone, ShieldAlert } from 'lucide-react';
 import { Protocol } from 'pmtiles';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -49,6 +50,11 @@ export function ExploreMap({ query, layers }: ExploreMapProps) {
       return categoryVisible && matchesSearch;
     });
   }, [layers.categories, query]);
+
+  const displayedSelectedFacility =
+    selectedFacility && visibleFacilities.some((facility) => facility.id === selectedFacility.id)
+      ? selectedFacility
+      : (visibleFacilities[0] ?? null);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
@@ -126,12 +132,6 @@ export function ExploreMap({ query, layers }: ExploreMapProps) {
     });
   }, [visibleFacilities]);
 
-  useEffect(() => {
-    if (selectedFacility && !visibleFacilities.some((facility) => facility.id === selectedFacility.id)) {
-      setSelectedFacility(visibleFacilities[0] ?? null);
-    }
-  }, [selectedFacility, visibleFacilities]);
-
   return (
     <div className="absolute inset-0 overflow-hidden bg-slate-200">
       <div ref={mapContainerRef} className="h-full w-full" />
@@ -145,7 +145,7 @@ export function ExploreMap({ query, layers }: ExploreMapProps) {
         {visibleFacilities.length} visible facilities
       </div>
 
-      {selectedFacility ? <SelectedFacilityCard facility={selectedFacility} /> : null}
+      {displayedSelectedFacility ? <SelectedFacilityCard facility={displayedSelectedFacility} /> : null}
     </div>
   );
 }
