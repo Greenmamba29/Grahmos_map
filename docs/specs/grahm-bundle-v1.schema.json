@@ -1,0 +1,537 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahmos.io/schemas/bundle/v1.json",
+  "title": "Grahm Bundle v1",
+  "description": "Normative schema for a .grahm continuity bundle. A bundle is a fully pinned, offline-verifiable description of a deployable continuity unit. DRAFT: not frozen. See grahm-bundle-v1.md for semantics, rule IDs and conformance requirements.",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "capabilities", "hardware", "integrity"],
+  "additionalProperties": false,
+
+  "properties": {
+    "apiVersion": {
+      "const": "grahmos.io/bundle/v1"
+    },
+    "kind": {
+      "const": "Bundle"
+    },
+
+    "metadata": {
+      "type": "object",
+      "required": ["name", "version", "title", "vendor", "created"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+          "description": "DNS-style bundle name, e.g. 'hospital' or 'stmarys.hospital'."
+        },
+        "version": {
+          "$ref": "#/$defs/semver",
+          "description": "Bundle version. MUST be semver. Rule B-101: the runtime rejects a version lower than the highest previously installed version for this name (E_ROLLBACK)."
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "vendor": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "RFC 3339 UTC. Informational only; freshness decisions use integrity.tuf expiry, not this field."
+        },
+        "license": {
+          "type": "string",
+          "description": "SPDX expression covering the bundle definition itself, not its constituent images."
+        },
+        "annotations": { "$ref": "#/$defs/stringMap" }
+      }
+    },
+
+    "capabilities": {
+      "type": "object",
+      "required": ["provides"],
+      "additionalProperties": false,
+      "properties": {
+        "provides": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["capability", "version", "providedBy"],
+            "additionalProperties": false,
+            "properties": {
+              "capability": { "$ref": "#/$defs/capabilityId" },
+              "version": { "$ref": "#/$defs/semver" },
+              "providedBy": {
+                "type": "string",
+                "description": "services.components[].id that implements this capability. Rule B-201: MUST resolve to a declared component."
+              },
+              "probe": {
+                "$ref": "#/$defs/capabilityProbe",
+                "description": "Rule B-202: every provided capability MUST declare a functional probe. Liveness checks are not acceptable."
+              }
+            }
+          }
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["capability", "range"],
+            "additionalProperties": false,
+            "properties": {
+              "capability": { "$ref": "#/$defs/capabilityId" },
+              "range": {
+                "type": "string",
+                "description": "Semver range. Rule B-203: MUST resolve to exactly one pinned provider at build time; bundles contain no floating references."
+              },
+              "optional": { "type": "boolean", "default": false },
+              "degradedWithout": {
+                "type": "string",
+                "description": "Human-readable statement of what the deployment loses if this is unsatisfied. Required when optional is true."
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "hardware": {
+      "type": "object",
+      "required": ["uptime_class", "ram", "storage"],
+      "additionalProperties": false,
+      "description": "Checked at plan time, before any byte is fetched. Rule B-301: an unsatisfiable hardware requirement MUST produce a refusal in the DeploymentPlan, not a runtime failure.",
+      "properties": {
+        "uptime_class": { "$ref": "#/$defs/orbClass" },
+        "arch": {
+          "type": "array",
+          "items": { "enum": ["amd64", "arm64"] },
+          "default": ["amd64"]
+        },
+        "ram": { "$ref": "#/$defs/byteSize" },
+        "storage": { "$ref": "#/$defs/byteSize" },
+        "cpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cores": { "type": "integer", "minimum": 1 },
+            "flags": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "accelerator": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean", "default": false },
+            "kinds": { "type": "array", "items": { "enum": ["cuda", "rocm", "npu", "vulkan"] } },
+            "vram": { "$ref": "#/$defs/byteSize" }
+          }
+        },
+        "networking": {
+          "type": "array",
+          "items": { "enum": ["ethernet", "wifi", "wifi_ap", "cellular", "mesh", "none"] },
+          "description": "Interfaces the bundle needs present. 'none' asserts the bundle is fully functional with no interface up."
+        },
+        "power": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ups_required": { "type": "boolean", "default": false },
+            "min_battery_minutes": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "mediaType", "digest", "size", "delivery"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "mediaType": { "type": "string" },
+              "digest": { "$ref": "#/$defs/digest" },
+              "size": { "type": "integer", "minimum": 0 },
+              "delivery": {
+                "enum": ["inline", "referenced"],
+                "description": "inline: carried as an OCI blob in this bundle. referenced: delivered separately and matched by digest. Rule B-401: a referenced dataset that is absent at install MUST produce a plan refusal, never a silent partial install."
+              },
+              "freshness": {
+                "type": "object",
+                "required": ["generated_at"],
+                "additionalProperties": false,
+                "properties": {
+                  "generated_at": { "type": "string", "format": "date-time" },
+                  "source_as_of": { "type": "string", "format": "date-time" },
+                  "max_age_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Rule B-402: evaluated at QUERY time, not install time. Exceeding it degrades answers; it does not delete data."
+                  }
+                }
+              },
+              "facilityRef": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Binds a dataset to a Facility Truth revision so provenance survives into Answer Receipts.",
+                "properties": {
+                  "facility_id": { "type": "string" },
+                  "revision": { "type": "integer", "minimum": 0 }
+                }
+              },
+              "buildProvenance": {
+                "type": "string",
+                "description": "Digest of the build attestation. Rule B-403: datasets that require heavy computation (e.g. routing tiles) MUST be built ahead of time; the runtime never builds them on the ORB."
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "services": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "image"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "image": {
+                "type": "string",
+                "pattern": "^[^@]+@sha256:[a-f0-9]{64}$",
+                "description": "Rule B-501: MUST be digest-pinned. Tags are rejected."
+              },
+              "backend": {
+                "type": "array",
+                "items": { "enum": ["docker", "podman", "systemd", "nspawn"] },
+                "description": "Apply backends this component supports. Absence means any container backend."
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "port"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": { "$ref": "#/$defs/identifier" },
+                    "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                    "protocol": { "enum": ["tcp", "udp"], "default": "tcp" },
+                    "exposure": { "enum": ["loopback", "lan", "public"], "default": "loopback" }
+                  }
+                }
+              },
+              "resources": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ram": { "$ref": "#/$defs/byteSize" },
+                  "cpu_millis": { "type": "integer", "minimum": 1 },
+                  "storage": { "$ref": "#/$defs/byteSize" }
+                }
+              },
+              "mounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["datasetId", "path"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "datasetId": { "$ref": "#/$defs/identifier" },
+                    "path": { "type": "string" },
+                    "readOnly": { "type": "boolean", "default": true }
+                  }
+                }
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/identifier" },
+                "description": "Rule B-502: the dependency graph MUST be acyclic."
+              },
+              "restartPolicy": { "enum": ["always", "on-failure", "never"], "default": "always" },
+              "degradedMode": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "What the deployment does when this component is unavailable. Rule B-503: 'silent' is not a permitted value anywhere in this schema.",
+                "properties": {
+                  "capabilitiesLost": { "type": "array", "items": { "$ref": "#/$defs/capabilityId" } },
+                  "userMessage": {
+                    "type": "string",
+                    "description": "Shown to the operator and folded into Answer Receipts. MUST state what is unavailable, not merely that something failed."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "offline": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "wan_required": {
+              "type": "boolean",
+              "default": false,
+              "description": "Rule B-601: a bundle declaring wan_required=true cannot achieve a Continuity Grade above C."
+            },
+            "max_offline_days": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Beyond this, the deployment reports itself as operating outside its qualified envelope. It does not stop serving."
+            }
+          }
+        },
+        "degradation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "answerPolicy": {
+              "enum": ["strict", "degraded_with_receipt"],
+              "default": "degraded_with_receipt",
+              "description": "strict: refuse when any source breaches freshness. degraded_with_receipt: answer, but the receipt MUST mark freshness.breached and the wording MUST change. Rule B-602: fabricating an answer without a receipt is non-conformant under both values."
+            },
+            "refusalAllowed": {
+              "const": true,
+              "description": "Rule B-603: refusal is a first-class answer kind and cannot be disabled. Present as a constant so the intent is visible in the artefact."
+            }
+          }
+        },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "incident_days": { "type": "integer", "minimum": 1 },
+            "audit_days": { "type": "integer", "minimum": 1 },
+            "receipt_days": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "breakGlass": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "quorum": { "type": "integer", "minimum": 1, "default": 2 },
+            "max_duration_minutes": { "type": "integer", "minimum": 1 },
+            "requires_audit_entry": {
+              "const": true,
+              "description": "Rule B-604: break-glass that is not hash-chained into the audit log is indistinguishable from a compromise."
+            }
+          }
+        }
+      }
+    },
+
+    "integrity": {
+      "type": "object",
+      "required": ["canonicalization", "signatures"],
+      "additionalProperties": false,
+      "properties": {
+        "canonicalization": {
+          "const": "RFC8785",
+          "description": "Rule B-701: digests are computed over RFC 8785 JCS bytes. Verifiers MUST verify over stored bytes, never over reparsed objects."
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["role", "keyId", "algorithm", "mode"],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "enum": ["bundle_author", "facility_authority", "qualification_authority"],
+                "description": "Rule B-702: facility_authority keys are customer-held; bundle_author keys are vendor-held. A single key filling both roles is non-conformant."
+              },
+              "keyId": { "type": "string" },
+              "algorithm": { "enum": ["ecdsa-p256-sha256", "ed25519"] },
+              "mode": {
+                "const": "keyed",
+                "description": "Rule B-703: keyless/Fulcio signing is non-conformant. Its offline verification path depends on a trusted root that goes stale with no offline refresh mechanism."
+              },
+              "referrerDigest": { "$ref": "#/$defs/digest" }
+            }
+          }
+        },
+        "sbom": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["format", "digest"],
+            "additionalProperties": false,
+            "properties": {
+              "format": { "enum": ["cyclonedx-json", "spdx-json"] },
+              "digest": { "$ref": "#/$defs/digest" }
+            }
+          }
+        },
+        "tuf": {
+          "type": "object",
+          "required": ["root_digest", "expires"],
+          "additionalProperties": false,
+          "description": "Rule B-704: the trusted root ships in-band with its own expiry. Expiry is a loud warning surfaced to the operator, never a silent pass.",
+          "properties": {
+            "root_digest": { "$ref": "#/$defs/digest" },
+            "snapshot_version": { "type": "integer", "minimum": 1 },
+            "expires": { "type": "string", "format": "date-time" }
+          }
+        },
+        "revocation_epoch": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Monotonic. Credentials issued below this epoch are refused offline with no network. Rule B-705: MUST NOT decrease."
+        }
+      }
+    },
+
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supersedes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/semver" }
+        },
+        "dataCompat": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Rule B-801: rollback across a declared-incompatible data migration MUST be refused by name, not attempted.",
+          "properties": {
+            "schema_version": { "type": "integer", "minimum": 1 },
+            "min_rollback_version": { "$ref": "#/$defs/semver" },
+            "irreversible_migrations": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "hooks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "preActivate": { "type": "string" },
+            "postActivate": { "type": "string" },
+            "preRollback": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requiredTests": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^Q-[0-9]{2}$" }
+        },
+        "minimumGrade": { "enum": ["A", "B", "C"] },
+        "enforcement": {
+          "enum": ["enforcing", "advisory"],
+          "default": "enforcing",
+          "description": "Rule B-901: under 'enforcing', install halts below minimumGrade unless overridden by a signed, audit-logged override. An unenforced grade is cosmetic."
+        },
+        "hardwareClassMatrix": {
+          "type": "array",
+          "description": "Rule B-902: a grade is scoped to (bundle, hardware class). A grade unqualified by hardware class is non-conformant.",
+          "items": {
+            "type": "object",
+            "required": ["uptime_class", "minimumGrade"],
+            "additionalProperties": false,
+            "properties": {
+              "uptime_class": { "$ref": "#/$defs/orbClass" },
+              "minimumGrade": { "enum": ["A", "B", "C"] }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+      "maxLength": 63
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^cap:[a-z0-9]+(\\.[a-z0-9]+){1,2}@[1-9][0-9]*$",
+      "description": "cap:<domain>.<function>[.<qualifier>]@<major>. The major version is the compatibility boundary."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "byteSize": {
+      "type": "string",
+      "pattern": "^[0-9]+(Ki|Mi|Gi|Ti)?B$",
+      "description": "Binary units only, to avoid the 1000-vs-1024 ambiguity. e.g. '16GiB'."
+    },
+    "orbClass": {
+      "enum": ["ORB-0", "ORB-1", "ORB-2", "ORB-3", "ORB-X"]
+    },
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "capabilityProbe": {
+      "type": "object",
+      "required": ["kind", "request", "expect"],
+      "additionalProperties": false,
+      "description": "Rule B-202: probes are functional. 'port is open' and 'process is running' are not conformant probes.",
+      "properties": {
+        "kind": { "const": "functional" },
+        "request": {
+          "type": "object",
+          "required": ["method", "path"],
+          "additionalProperties": false,
+          "properties": {
+            "method": { "enum": ["GET", "POST"] },
+            "path": { "type": "string" },
+            "body": {}
+          }
+        },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "At least one assertion beyond status MUST be present.",
+          "minProperties": 2,
+          "properties": {
+            "status": { "type": "integer" },
+            "jsonPath": { "type": "string" },
+            "matches": {},
+            "withinTolerance": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "goldenValue": { "type": "number" },
+                "tolerancePercent": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "timeout_ms": { "type": "integer", "minimum": 1, "default": 5000 },
+        "run_when": {
+          "type": "array",
+          "items": { "enum": ["post_apply", "periodic", "pre_qualification"] },
+          "default": ["post_apply", "periodic"]
+        }
+      }
+    }
+  }
+}
