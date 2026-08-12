@@ -1,0 +1,16 @@
+{
+  "name": "Resilience Maps",
+  "short_name": "Resilience",
+  "description": "Offline-first mapping for critical infrastructure",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1A73E8",
+  "background_color": "#F8F9FA",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
