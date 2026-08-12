@@ -21,11 +21,17 @@
 
 When a reviewer finds a defect, it files a finding. **The implementing agent fixes it.** A reviewer that patches its own findings has reviewed nothing.
 
+**How C1 is enforced.** A constraint enforced by nothing is a preference. Every PR carries an `Authored-by-model:` and `Reviewed-by-model:` trailer; gate G1 rejects a PR whose authoring trailer names a Fable 5 or Opus variant, and rejects one whose reviewing trailer is empty. This is an honest-agent mechanism, not a security control — it catches drift and mistakes, not a determined bypass. Say so rather than implying stronger enforcement than exists.
+
 ### C2 — Open source only, and verified
 
-Every third-party dependency MUST be an open-source project reachable in a public GitHub repository, with its license read from the repository — not inferred from a badge, a package registry field, or memory. Verified inventory: [`../upstream/OPEN_SOURCE_REGISTRY.md`](../upstream/OPEN_SOURCE_REGISTRY.md).
+Every third-party dependency MUST be an open-source project with a public source repository, and its license MUST be read from that repository — not inferred from a badge, a package registry field, or memory. Verified inventory: [`../upstream/OPEN_SOURCE_REGISTRY.md`](../upstream/OPEN_SOURCE_REGISTRY.md).
 
-Adding a dependency requires, in the same change: repository URL, license verified by reading the file, maintenance signal, and the capability it serves. No exceptions for transitive-only additions that end up in a bundle.
+GitHub is the default host, not a requirement; GitLab, Codeberg, and self-hosted forges are acceptable if the repository and its license file are publicly readable.
+
+Adding a dependency requires, in the same change: repository URL, license quoted from the file, maintenance signal, and the capability or build stage it serves. No exceptions for transitive-only additions that end up in a bundle.
+
+**Known state: the inventory is incomplete.** Section 3.3 of the registry lists what is still missing. C2 is the standard; the registry does not yet meet it, and it should not be cited as a clearance. Its first version missed OpenStreetMap's ODbL — the licence binding the artefact the product actually sells — which is the argument for generating the inventory from an SBOM rather than maintaining it by hand.
 
 ### C3 — No new major subsystem
 
@@ -69,6 +75,14 @@ No change reaches the default branch without passing its gate. Gates are cumulat
 | **G4 — Supply chain** | Any dependency addition or version bump | `reviewer-correctness` | Unverified license; unpinned reference; C2 violation |
 
 **G2 is the gate that matters most**, and it is deliberately adversarial rather than checklist-driven. Its single question: *can this change cause GrahmOS to state something it cannot verify?* The reviewer's job is to find the path, not to confirm its absence.
+
+**G2 does not stop at the receipt.** A receipt that correctly reports `breached: true`, rendered in small grey text beneath a large confident route line, satisfies "a receipt was attached" and realises risk R1 anyway. G2 therefore also blocks on presentation: any change to a client surface must be reviewed against the rendering contract, and "the data layer is honest" is not a defence when the pixels are not.
+
+### The gates have been exercised once
+
+This repository's plan and specification were themselves put through G1 and G2 before the first PR. The review found that the schema rejected 3 of 11 fixture classes its own prose required, that the qualification rubric could be satisfied by appending a timestamp to every answer, that a bundle could select the tests it was graded on, and that the license inventory had missed the licence governing the shipped datasets. All were fixed by the implementing agent, not the reviewer.
+
+That is recorded here as calibration: a review of a document this size found roughly a dozen defects that would each have survived into implementation. A gate that finds nothing has not passed — it has failed quietly.
 
 ---
 

@@ -1,7 +1,9 @@
 # GrahmOS Continuity Control Plane — Engineering Execution Plan
 
-**Status:** Plan of record, v1 draft. No production code in this document.
+**Status:** Plan of record, v1 draft, revised after adversarial review. No production code in this document.
 **Audience:** engineering lead starting Epic 1 immediately.
+
+> **Revision note.** This plan and its specification were put through the review gates defined in [`agents/AGENTS.md`](agents/AGENTS.md) before first publication. The review found that the schema rejected 3 of the 11 fixture classes its own prose required, that the qualification rubric could be satisfied by appending a timestamp to every answer, that a bundle could choose the tests it was graded on, and that the license inventory had omitted the licence governing the shipped datasets. Those are fixed. Passages marked *"an earlier draft"* record what was wrong and why, because a reader who does not know what was nearly shipped cannot judge whether the fix is sufficient.
 **Companion artifacts:** [`specs/grahm-bundle-v1.md`](specs/grahm-bundle-v1.md), [`specs/grahm-bundle-v1.schema.json`](specs/grahm-bundle-v1.schema.json), [`agents/AGENTS.md`](agents/AGENTS.md), [`upstream/OPEN_SOURCE_REGISTRY.md`](upstream/OPEN_SOURCE_REGISTRY.md)
 
 ---
@@ -650,7 +652,7 @@ The memo's list, plus five conditions it omits that are the ones that actually b
 
 **Q-08 and Q-16 are the two most valuable tests here.** Q-08 because clock skew silently invalidates every trust decision in a disconnected system, and Q-16 because it is the only test that mechanically enforces the memo's central safety argument.
 
-**Q-17 was one test in an earlier draft, and it contradicted A4.5.** "Expired credential → denied" and "expired within grace → allowed and logged" cannot both be satisfied by one assertion, so a correct implementation of Epic 4's central availability/security trade-off failed Epic 5's gate. Splitting it into Q-17a and Q-17b tests both directions, which is what the trade-off actually requires.
+**Q-17 was one test in an earlier draft, and it contradicted A4.5b.** "Expired credential → denied" and "expired within grace → allowed and logged" cannot both be satisfied by one assertion, so a correct implementation of Epic 4's central availability/security trade-off failed Epic 5's gate. Splitting it into Q-17a and Q-17b tests both directions, which is what the trade-off actually requires.
 
 #### Q-16's pass criterion must be structural, not textual
 
@@ -925,6 +927,8 @@ A class is only real once the harness can detect it and the rubric can grade aga
 | 12 | Answer Receipts wired end to end | 9, 8 | Q-16 degrades correctly |
 | 13 | Full qualification matrix + rubric + signed report | 4, 8, 12 | A5.1 negative control fails as designed |
 | 14 | Positioning, CAP, IndoorGML alignment | 9, 13 | — |
+
+**Two items that are not steps and must run alongside:** the **rendering contract** (§Answer Receipts) has no natural slot in this sequence but gates whether the safety claim holds in the product rather than only in the runtime — start it with step 12. The **cold-boot budget** must be declared before step 13, because Q-20 and grade A both depend on it and neither is evaluable without a number.
 
 **Deviation from the memo, and why:** the memo orders Qualification fifth. Steps 2 and 13 split it: the *harness* is second, the *full matrix and rubric* are thirteenth. Building the harness after the system means every prior epic was merged without offline proof, and retrofitting offline behaviour is far more expensive than requiring it.
 

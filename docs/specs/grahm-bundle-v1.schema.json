@@ -563,9 +563,10 @@
             { "contains": { "const": "Q-12" } },
             { "contains": { "const": "Q-16" } },
             { "contains": { "const": "Q-17a" } },
-            { "contains": { "const": "Q-17b" } }
+            { "contains": { "const": "Q-17b" } },
+            { "contains": { "const": "Q-21" } }
           ],
-          "description": "B-903: the mandatory floor (Q-08 clock, Q-09..Q-12 all REJECT tests, Q-16 stale-data honesty, Q-17a/b credential expiry both directions) MUST be present in every bundle regardless of hardware class. Without a floor, a bundle selects the tests it is graded on and earns grade A vacuously."
+          "description": "B-903: the mandatory floor (Q-08 clock, Q-09..Q-12 all REJECT tests, Q-16 stale-data honesty, Q-17a/b credential expiry in both directions, Q-21 revision skew) MUST be present in every bundle regardless of hardware class. Without a floor, a bundle selects the tests it is graded on and earns grade A vacuously."
         },
         "minimumGrade": { "$ref": "#/$defs/grade" },
         "enforcement": {
@@ -620,7 +621,7 @@
       "enum": [
         "Q-01", "Q-02", "Q-03", "Q-04", "Q-05", "Q-06", "Q-07", "Q-08",
         "Q-09", "Q-10", "Q-11", "Q-12", "Q-13", "Q-14", "Q-15", "Q-16",
-        "Q-17a", "Q-17b", "Q-18", "Q-19", "Q-20"
+        "Q-17a", "Q-17b", "Q-18", "Q-19", "Q-20", "Q-21", "Q-22"
       ]
     },
     "stringMap": { "type": "object", "additionalProperties": { "type": "string" } },

@@ -42,7 +42,7 @@ doc = {
       "tuf": {"root_digest": "sha256:" + "c"*64, "snapshot_version": 12, "expires": "2026-11-01T00:00:00Z"},
       "revocation_epoch_floor": 3},
   "qualification": {
-      "requiredTests": ["Q-01", "Q-08", "Q-09", "Q-10", "Q-11", "Q-12", "Q-16", "Q-17a", "Q-17b"],
+      "requiredTests": ["Q-01", "Q-08", "Q-09", "Q-10", "Q-11", "Q-12", "Q-16", "Q-17a", "Q-17b", "Q-21"],
       "minimumGrade": "A", "enforcement": "enforcing",
       "hardwareClassMatrix": [{"uptime_class": "ORB-2", "minimumGrade": "A"},
                               {"uptime_class": "ORB-1", "minimumGrade": "B"}]},
