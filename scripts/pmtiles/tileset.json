@@ -1,0 +1,20 @@
+{
+  "$comment": "Planetiler profile config reference for the OpenMapTiles schema used by 03_generate_vector_pmtiles.sh. Adjust layers/zoom ranges per-region as needed.",
+  "layers": [
+    "water",
+    "waterway",
+    "landcover",
+    "landuse",
+    "park",
+    "boundary",
+    "transportation",
+    "building",
+    "place",
+    "poi",
+    "housenumber",
+    "aeroway",
+    "mountain_peak"
+  ],
+  "minzoom": 0,
+  "maxzoom": 14
+}

@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount generated PMTiles archives without rebuilding the image —
+      # regenerate via scripts/pmtiles/ (see INSTALLATION_GUIDE.md §4).
+      - ../public/tiles:/usr/share/nginx/html/tiles:ro
+    restart: unless-stopped

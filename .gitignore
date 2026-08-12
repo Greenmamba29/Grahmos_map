@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.local
+*.tsbuildinfo
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# generated tiles + osm/dem source data (large binaries, generated via scripts/pmtiles)
+public/tiles/*.pmtiles
+data/
+
+# OS
+.DS_Store
