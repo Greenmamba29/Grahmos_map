@@ -1,0 +1,15 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-}
+        VITE_MAP_PM_TILES_URL: ${VITE_MAP_PM_TILES_URL:-/tiles/region.pmtiles}
+        VITE_TERRAIN_PM_TILES_URL: ${VITE_TERRAIN_PM_TILES_URL:-/tiles/terrain.pmtiles}
+        VITE_SATELLITE_PM_TILES_URL: ${VITE_SATELLITE_PM_TILES_URL:-/tiles/satellite.pmtiles}
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /srv/resilience-maps/tiles:/usr/share/nginx/html/tiles:ro
+    restart: unless-stopped
