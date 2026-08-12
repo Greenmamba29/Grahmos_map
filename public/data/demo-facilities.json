@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-08-12T04:42:00.000Z",
+  "region": "Nairobi demo",
+  "notice": "Demonstration data only; operational status is not authoritative.",
+  "facilities": [
+    {
+      "id": "facility-kenyatta",
+      "name": "Kenyatta National Hospital",
+      "category": "hospital",
+      "status": "operational",
+      "capacity": 1800,
+      "longitude": 36.8065,
+      "latitude": -1.3004
+    },
+    {
+      "id": "facility-uhuru-shelter",
+      "name": "Uhuru Community Shelter",
+      "category": "shelter",
+      "status": "limited",
+      "capacity": 240,
+      "longitude": 36.8151,
+      "latitude": -1.2926
+    }
+  ]
+}

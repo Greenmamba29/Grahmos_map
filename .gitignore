@@ -6,8 +6,8 @@ coverage
 .env.*.local
 *.log
 .DS_Store
-public/tiles
-data
+/public/tiles
+/data
 *.pmtiles
 *.osm.pbf
 *.tsbuildinfo

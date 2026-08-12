@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import maplibregl, {
+import type { Feature, Polygon } from 'geojson'
+import * as maplibregl from 'maplibre-gl'
+import {
   GeoJSONSource,
-  type LngLatBoundsLike,
   type Map as MapLibreMap,
   type Marker,
 } from 'maplibre-gl'
@@ -28,11 +29,6 @@ import {
   type LayerState,
 } from '../types/map'
 
-const NAIROBI_BOUNDS: LngLatBoundsLike = [
-  [36.74, -1.35],
-  [36.9, -1.23],
-]
-
 const initialCategories = Object.fromEntries(
   facilityCategories.map((category) => [category, true]),
 ) as LayerState['categories']
@@ -52,7 +48,7 @@ const categoryShortLabel: Record<FacilityCategory, string> = {
   power: 'P',
 }
 
-const offlineRegion: GeoJSON.Feature<GeoJSON.Polygon> = {
+const offlineRegion: Feature<Polygon> = {
   type: 'Feature',
   properties: { name: 'Central Nairobi offline region' },
   geometry: {
@@ -154,7 +150,9 @@ export function ExploreScreen() {
   const online = useConnectivity()
   const { facilities, source } = useFacilities(online)
 
-  layerStateRef.current = layerState
+  useEffect(() => {
+    layerStateRef.current = layerState
+  }, [layerState])
 
   const visibleFacilities = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()
