@@ -1,0 +1,4 @@
+PMTiles archives are generated, not committed.
+
+Run ./scripts/make-pmtiles.sh to produce region.pmtiles here, and
+./scripts/make-terrain.sh for terrain.pmtiles. See INSTALLATION_GUIDE.md §7–8.

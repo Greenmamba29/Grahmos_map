@@ -1,0 +1,25 @@
+node_modules
+dist
+dev-dist
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# generated / downloaded tile archives and OSM extracts
+public/tiles/*
+!public/tiles/.gitkeep
+data/
+*.pmtiles
+*.mbtiles
+*.osm.pbf
+
+# tsc build info
+node_modules/.tmp
+*.tsbuildinfo
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+*.log

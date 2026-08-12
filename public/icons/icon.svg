@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Resilience Maps">
+  <rect width="512" height="512" rx="112" fill="#1A73E8" />
+  <path
+    d="M64 352l96-64 96 40 96-72 96 48v112H64z"
+    fill="#ffffff"
+    opacity="0.28"
+  />
+  <path
+    d="M64 300l96-72 96 44 96-84 96 60"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="20"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.85"
+  />
+  <circle cx="256" cy="196" r="60" fill="#ffffff" />
+  <path
+    d="M256 168v56M228 196h56"
+    stroke="#1A73E8"
+    stroke-width="20"
+    stroke-linecap="round"
+  />
+</svg>
