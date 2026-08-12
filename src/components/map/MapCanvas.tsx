@@ -10,6 +10,7 @@ import {
   type Map as MapLibreMap,
   type StyleSpecification,
 } from 'maplibre-gl'
+import type { FeatureCollection, Point } from 'geojson'
 import { Protocol } from 'pmtiles'
 import type { Facility, LayerPreferences } from '../../types/facilities'
 
@@ -99,7 +100,7 @@ function baseStyle(): StyleSpecification {
   }
 }
 
-function facilitiesGeoJson(facilities: Facility[]): GeoJSON.FeatureCollection {
+function facilitiesGeoJson(facilities: Facility[]): FeatureCollection {
   return {
     type: 'FeatureCollection',
     features: facilities.map((facility) => ({
@@ -269,7 +270,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
 
         map.on('click', 'facility-points', (event) => {
           const feature = event.features?.[0]
-          const coordinates = (feature?.geometry as GeoJSON.Point | undefined)
+          const coordinates = (feature?.geometry as Point | undefined)
             ?.coordinates as [number, number] | undefined
           if (!feature?.properties || !coordinates) return
           new maplibregl.Popup({ offset: 14, closeButton: false })
