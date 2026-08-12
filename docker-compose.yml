@@ -1,0 +1,7 @@
+services:
+  resilience-maps:
+    build: .
+    image: resilience-maps:latest
+    ports:
+      - "8080:80"
+    restart: unless-stopped
