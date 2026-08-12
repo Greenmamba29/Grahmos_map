@@ -11,7 +11,8 @@ export function MapLegend({ visibleCount }: MapLegendProps) {
         <ShieldCheck size={14} />
       </span>
       <span>
-        <strong>{visibleCount}</strong> facilities in view
+        <strong>{visibleCount}</strong>{' '}
+        {visibleCount === 1 ? 'facility' : 'facilities'} in view
       </span>
     </div>
   )

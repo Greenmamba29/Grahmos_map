@@ -34,7 +34,7 @@ const initialCategories = Object.fromEntries(
 ) as LayerState['categories']
 
 const initialLayerState: LayerState = {
-  baseLayer: 'terrain',
+  baseLayer: 'streets',
   terrainEnabled: false,
   offlineRegionsVisible: true,
   categories: initialCategories,

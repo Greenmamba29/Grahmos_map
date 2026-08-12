@@ -35,7 +35,12 @@ const baseLayers: {
   icon: LucideIcon
   available: boolean
 }[] = [
-  { id: 'terrain', label: 'Terrain', icon: Mountain, available: true },
+  {
+    id: 'terrain',
+    label: 'Terrain',
+    icon: Mountain,
+    available: layerAvailability.terrain,
+  },
   { id: 'streets', label: 'Streets', icon: Map, available: true },
   {
     id: 'satellite',
@@ -77,7 +82,9 @@ export function LayersDrawer({
 
       <aside
         className={clsx('layers-drawer', open && 'open')}
-        aria-hidden={!open}
+        inert={!open}
+        role="dialog"
+        aria-modal="true"
         aria-label="Map layers"
       >
         <div className="drawer-handle" />
