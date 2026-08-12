@@ -1,0 +1,11 @@
+services:
+  resilience-maps:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    # For TLS, mount certs and switch nginx.conf to the ssl server block:
+    # volumes:
+    #   - /etc/letsencrypt:/etc/letsencrypt:ro

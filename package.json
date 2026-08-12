@@ -1,0 +1,33 @@
+{
+  "name": "resilience-maps",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Offline-first mapping web app for locating critical infrastructure during connectivity outages.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "idb": "^8.0.3",
+    "maplibre-gl": "^6.3.0",
+    "pmtiles": "^4.5.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1",
+    "vite-plugin-pwa": "^1.3.0",
+    "workbox-window": "^7.4.1"
+  }
+}
