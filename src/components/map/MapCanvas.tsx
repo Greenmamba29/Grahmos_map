@@ -4,7 +4,8 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react'
-import maplibregl, {
+import * as maplibregl from 'maplibre-gl'
+import {
   type GeoJSONSource,
   type Map as MapLibreMap,
   type StyleSpecification,
@@ -128,6 +129,8 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
   function MapCanvas({ facilities, preferences }, ref) {
     const container = useRef<HTMLDivElement>(null)
     const mapRef = useRef<MapLibreMap | null>(null)
+    const initialFacilities = useRef(facilities)
+    const initialPreferences = useRef(preferences)
 
     useImperativeHandle(ref, () => ({
       locate() {
@@ -206,7 +209,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
           source: 'downloaded-regions',
           paint: { 'fill-color': '#1A73E8', 'fill-opacity': 0.06 },
           layout: {
-            visibility: preferences.downloadedRegions ? 'visible' : 'none',
+            visibility: initialPreferences.current.downloadedRegions ? 'visible' : 'none',
           },
         })
         map.addLayer({
@@ -219,13 +222,13 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
             'line-dasharray': [2, 2],
           },
           layout: {
-            visibility: preferences.downloadedRegions ? 'visible' : 'none',
+            visibility: initialPreferences.current.downloadedRegions ? 'visible' : 'none',
           },
         })
 
         map.addSource('facilities', {
           type: 'geojson',
-          data: facilitiesGeoJson(facilities),
+          data: facilitiesGeoJson(initialFacilities.current),
         })
         map.addLayer({
           id: 'facility-halo',
