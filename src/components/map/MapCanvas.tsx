@@ -109,8 +109,18 @@ export function MapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availability.probed]);
 
+  const appliedStyle = useRef<string | null>(null);
   useEffect(() => {
     if (!map) return;
+    const signature = `${basemap}|${hillshade}|${availability.vector}|${availability.terrain}`;
+    // The map is constructed with this style already; skip the first pass so we
+    // do not immediately tear it down (and the overlay layers with it).
+    if (appliedStyle.current === null) {
+      appliedStyle.current = signature;
+      return;
+    }
+    if (appliedStyle.current === signature) return;
+    appliedStyle.current = signature;
     map.setStyle(
       buildStyle({
         basemap,

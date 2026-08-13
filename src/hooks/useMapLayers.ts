@@ -21,9 +21,11 @@ export function useMapLayers(setup: () => void | (() => void), deps: unknown[] =
     };
 
     run();
-    map.on('styledata', run);
+    // `style.load` fires after setStyle finishes. `styledata` fires continuously
+    // during tile load and would tear the overlay layers down and back up.
+    map.on('style.load', run);
     return () => {
-      map.off('styledata', run);
+      map.off('style.load', run);
       cleanup?.();
     };
     // The caller declares its own dependencies; `setup` is intentionally not one

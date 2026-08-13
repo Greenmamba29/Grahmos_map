@@ -1,0 +1,13 @@
+node_modules
+dist
+dev-dist
+.git
+.gitignore
+*.md
+.env
+.env.*
+data
+*.pmtiles
+*.mbtiles
+*.osm.pbf
+npm-debug.log
