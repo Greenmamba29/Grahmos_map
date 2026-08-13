@@ -4,6 +4,7 @@ import { useAppStore } from "../store/appStore";
 import { planRoute } from "../data/routePlanner";
 import { styleFor } from "../map/styleFactory";
 import { ensurePmtilesProtocol } from "../map/pmtilesProtocol";
+import { isWebglSupported } from "../map/webgl";
 import { env, CATEGORY_META } from "../config";
 import { ElevationProfile } from "../components/route/ElevationProfile";
 import { CautionBanner } from "../components/route/CautionBanner";
@@ -173,7 +174,7 @@ function RoutePreviewMap({ line }: { line: [number, number][] }) {
   const mapInst = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || !isWebglSupported()) return;
     ensurePmtilesProtocol();
     const map = new maplibregl.Map({
       container: ref.current,
@@ -236,5 +237,13 @@ function RoutePreviewMap({ line }: { line: [number, number][] }) {
     };
   }, [line]);
 
-  return <div ref={ref} className="absolute inset-0" />;
+  return (
+    <div ref={ref} className="absolute inset-0 bg-gray-100">
+      {!isWebglSupported() && (
+        <div className="grid h-full place-items-center text-sm text-ink-soft">
+          Route preview unavailable (WebGL blocked)
+        </div>
+      )}
+    </div>
+  );
 }

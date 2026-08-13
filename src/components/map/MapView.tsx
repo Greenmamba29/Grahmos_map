@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import { ensurePmtilesProtocol } from "../../map/pmtilesProtocol";
+import { isWebglSupported } from "../../map/webgl";
 import { styleFor } from "../../map/styleFactory";
 import { mapRef } from "../../map/mapInstance";
 import { env, CATEGORY_META, STATUS_META } from "../../config";
@@ -41,6 +42,7 @@ export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef(new Map<string, maplibregl.Marker>());
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const [mapFailed, setMapFailed] = useState(false);
 
   const facilities = useFilteredFacilities();
   const mapType = useAppStore((s) => s.layers.mapType);
@@ -55,14 +57,24 @@ export function MapView() {
   // Init once.
   useEffect(() => {
     if (!containerRef.current) return;
+    if (!isWebglSupported()) {
+      setMapFailed(true);
+      return;
+    }
     ensurePmtilesProtocol();
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: styleFor("default"),
-      center: env.defaultCenter,
-      zoom: env.defaultZoom,
-      attributionControl: { compact: true },
-    });
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: styleFor("default"),
+        center: env.defaultCenter,
+        zoom: env.defaultZoom,
+        attributionControl: { compact: true },
+      });
+    } catch {
+      setMapFailed(true);
+      return;
+    }
     mapRef.current = map;
     map.on("click", () => useAppStore.getState().selectFacility(null));
     return () => {
@@ -205,6 +217,20 @@ export function MapView() {
       map.off("style.load", apply);
     };
   }, [showOfflineRegions, regions, hillshade, contours, mapType]);
+
+  if (mapFailed) {
+    return (
+      <div className="absolute inset-0 grid place-items-center bg-gray-100 px-8">
+        <div className="max-w-xs text-center">
+          <p className="mb-1 font-medium text-ink">Map can’t render here</p>
+          <p className="text-sm text-ink-soft">
+            This browser blocks WebGL, which the map needs. Search, facility
+            details, routes and offline downloads still work.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return <div ref={containerRef} className="absolute inset-0" />;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import { ensurePmtilesProtocol } from "../../map/pmtilesProtocol";
+import { isWebglSupported } from "../../map/webgl";
 import { styleFor } from "../../map/styleFactory";
 import { env } from "../../config";
 import { useAppStore } from "../../store/appStore";
@@ -42,6 +43,17 @@ export function RegionSelectModal({ onClose }: Props) {
 
   useEffect(() => {
     if (!ref.current) return;
+    if (!isWebglSupported()) {
+      // No map — offer a sensible default box around the home view so the
+      // download flow still works on WebGL-less browsers.
+      setBbox({
+        minLng: env.defaultCenter[0] - 0.08,
+        minLat: env.defaultCenter[1] - 0.06,
+        maxLng: env.defaultCenter[0] + 0.08,
+        maxLat: env.defaultCenter[1] + 0.06,
+      });
+      return;
+    }
     ensurePmtilesProtocol();
     const map = new maplibregl.Map({
       container: ref.current,
