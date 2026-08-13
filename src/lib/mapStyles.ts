@@ -57,7 +57,9 @@ export function buildStyle(options: StyleOptions): StyleSpecification {
 
   if (basemap === 'satellite') {
     return rasterStyle(config.satelliteTilesUrl || config.fallbackRasterTilesUrl, {
-      attribution: config.satelliteTilesUrl ? 'Satellite imagery' : '© OpenStreetMap contributors',
+      attribution: config.satelliteTilesUrl
+        ? 'Satellite imagery'
+        : '© OpenStreetMap contributors © CARTO',
       terrainAvailable,
       hillshade,
     });
@@ -65,7 +67,7 @@ export function buildStyle(options: StyleOptions): StyleSpecification {
 
   if (!vectorAvailable) {
     return rasterStyle(config.fallbackRasterTilesUrl, {
-      attribution: '© OpenStreetMap contributors',
+      attribution: '© OpenStreetMap contributors © CARTO',
       terrainAvailable,
       hillshade: hillshade && basemap === 'terrain',
     });

@@ -17,7 +17,7 @@ ARG VITE_SUPABASE_URL=
 ARG VITE_SUPABASE_ANON_KEY=
 ARG VITE_BASEMAP_PMTILES_URL=/tiles/region.pmtiles
 ARG VITE_TERRAIN_PMTILES_URL=/tiles/terrain.pmtiles
-ARG VITE_FALLBACK_RASTER_TILES_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+ARG VITE_FALLBACK_RASTER_TILES_URL=https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
 ARG VITE_DEFAULT_CENTER=-72.3350,18.5392
 ARG VITE_DEFAULT_ZOOM=12
 

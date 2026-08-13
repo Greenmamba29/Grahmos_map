@@ -87,7 +87,20 @@ export function MapCanvas({
 
     mapRef.current = instance;
 
-    instance.on('load', () => setMap(instance));
+    // `load` waits for every tile in the style. OSM (and a missing PMTiles
+    // archive) can stall that forever, which would leave pins, routes and
+    // hazards unmounted. `style.load` is enough: the style is ready to accept
+    // overlay sources even if the basemap is still fetching.
+    const publish = () => {
+      if (mapRef.current === instance) setMap(instance);
+    };
+    if (instance.isStyleLoaded()) {
+      publish();
+    } else {
+      instance.once('style.load', publish);
+    }
+    const fallback = window.setTimeout(publish, 2000);
+
     instance.on('moveend', () => {
       const center = instance.getCenter();
       setCamera([center.lng, center.lat], instance.getZoom());
@@ -99,7 +112,18 @@ export function MapCanvas({
       console.warn('[map]', message || event.error);
     });
 
+    const resize = () => instance.resize();
+    const frame = requestAnimationFrame(resize);
+    const observer =
+      container.current && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(resize)
+        : null;
+    observer?.observe(container.current!);
+
     return () => {
+      window.clearTimeout(fallback);
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
       instance.remove();
       mapRef.current = null;
       setMap(null);

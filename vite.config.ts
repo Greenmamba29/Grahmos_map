@@ -63,6 +63,9 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  optimizeDeps: {
+    include: ['maplibre-gl'],
+  },
   preview: {
     port: 4173,
     host: true,

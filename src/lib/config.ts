@@ -35,7 +35,7 @@ export const config = {
   satelliteTilesUrl: str(env.VITE_SATELLITE_TILES_URL),
   fallbackRasterTilesUrl: str(
     env.VITE_FALLBACK_RASTER_TILES_URL,
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
   ),
 
   defaultCenter: parseCenter(env.VITE_DEFAULT_CENTER, [-72.335, 18.5392]),

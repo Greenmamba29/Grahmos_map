@@ -272,7 +272,7 @@ VITE_TERRAIN_PMTILES_URL=/tiles/terrain.pmtiles
 VITE_SATELLITE_TILES_URL=
 
 # Optional online fallback style used only when a PMTiles archive is absent
-VITE_FALLBACK_RASTER_TILES_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+VITE_FALLBACK_RASTER_TILES_URL=https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
 
 # Default map view (lon,lat,zoom)
 VITE_DEFAULT_CENTER=-72.3350,18.5392

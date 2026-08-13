@@ -7,7 +7,7 @@ services:
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
         VITE_BASEMAP_PMTILES_URL: ${VITE_BASEMAP_PMTILES_URL:-/tiles/region.pmtiles}
         VITE_TERRAIN_PMTILES_URL: ${VITE_TERRAIN_PMTILES_URL:-/tiles/terrain.pmtiles}
-        VITE_FALLBACK_RASTER_TILES_URL: ${VITE_FALLBACK_RASTER_TILES_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+        VITE_FALLBACK_RASTER_TILES_URL: ${VITE_FALLBACK_RASTER_TILES_URL:-https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png}
         VITE_DEFAULT_CENTER: ${VITE_DEFAULT_CENTER:--72.3350,18.5392}
         VITE_DEFAULT_ZOOM: ${VITE_DEFAULT_ZOOM:-12}
     image: resilience-maps:latest
