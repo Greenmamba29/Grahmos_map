@@ -10,7 +10,7 @@ dev-dist
 # generated / downloaded tile archives and OSM extracts
 public/tiles/*
 !public/tiles/.gitkeep
-data/
+/data/
 *.pmtiles
 *.mbtiles
 *.osm.pbf
