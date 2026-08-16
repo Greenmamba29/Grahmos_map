@@ -19,7 +19,7 @@ pnpm-debug.log*
 
 # generated tiles + osm/dem source data (large binaries, generated via scripts/pmtiles)
 public/tiles/*.pmtiles
-data/
+/data/
 
 # OS
 .DS_Store
