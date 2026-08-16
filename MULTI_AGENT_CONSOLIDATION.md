@@ -12,9 +12,9 @@ writes, and opened PRs so each remaining candidate can be deployed and compared.
 | `cursor/resilience-maps-73b2` | ✅ | UI exercised | Pending create (this agent) |
 | `cursor/resilience-maps-0726` | ✅ | ✅ vitest 3/3 | Pending create |
 | `cursor/resilience-maps-scaffold-afc6` | ✅ | — | Pending create |
-| `cursor/resilience-maps-offline-first-d911` | 🔧 completing missing `src/data/*` | — | After fix |
-| `cursor/resilience-maps-scaffold-a0bc` | 🔧 completing missing `src/data/*` | — | After fix |
-| `cursor/resilience-maps-scaffold-814c` | 🔧 completing missing `mockFacilities` | — | After fix |
+| `cursor/resilience-maps-offline-first-d911` | ✅ (seeds + network completed) | — | Pending create |
+| `cursor/resilience-maps-scaffold-a0bc` | ✅ (typed data layer completed) | — | Pending create |
+| `cursor/resilience-maps-scaffold-814c` | ✅ (mockFacilities completed) | — | Pending create |
 | `cursor/resilience-maps-scaffold-f0d2` | ❌ type errors + missing `categories` | — | Optional follow-up |
 
 ## Top 5 for deployment testing
