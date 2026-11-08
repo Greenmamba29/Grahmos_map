@@ -97,6 +97,18 @@ class Kalman2D {
     this.state = null
   }
 
+  get initialized() {
+    return this.state !== null
+  }
+
+  /** Dead-reckoning prediction: move the estimate by (dx, dy) and grow its variance by `addVariance`. */
+  shift(dx: number, dy: number, addVariance: number) {
+    if (!this.state) return null
+    this.state = [this.state[0] + dx, this.state[1] + dy]
+    this.variance += addVariance
+    return { position: this.state, variance: this.variance }
+  }
+
   update(measurement: Point, measurementVariance: number, at: number): { position: Point; variance: number } {
     if (!this.state) {
       this.state = [...measurement] as Point
@@ -142,6 +154,19 @@ export class PositioningEngine {
 
   get currentLevel() {
     return this.levelId
+  }
+
+  /**
+   * Fuses one detected step (pdr.ts) as a Kalman prediction. Each step adds ~(0.15·length)² m² of
+   * uncertainty; the next BLE estimate corrects drift. Returns the predicted position, or null before the
+   * first BLE fix (dead reckoning needs a starting point).
+   */
+  applyStep(dx: number, dy: number, at: number): IndoorPosition | null {
+    if (!this.levelId || !this.kalman.initialized) return null
+    const length = Math.hypot(dx, dy)
+    const r = this.kalman.shift(dx, dy, (0.15 * length) ** 2 + 0.05)
+    if (!r) return null
+    return { levelId: this.levelId, position: r.position, accuracy: Math.sqrt(r.variance) + 0.5, source: 'ble', at }
   }
 
   ingest(sighting: BeaconSighting) {

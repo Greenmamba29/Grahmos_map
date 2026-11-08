@@ -385,6 +385,7 @@ export function App() {
         <CircleDot size={12} className={online ? 'ok' : 'warn'} />
         <span>
           {online ? 'Online' : 'Offline'} · {positioning.mode === 'off' ? 'location off' : `${positioning.mode} location`}
+          {positioning.steps > 0 && ` · ${positioning.steps} steps`}
           {annotations.length > 0 && ` · ${annotations.length} alert${annotations.length > 1 ? 's' : ''}`}
         </span>
       </div>

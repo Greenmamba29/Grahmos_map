@@ -4,6 +4,7 @@ import { PositioningEngine } from '../positioning/engine'
 import { BleClient } from '@capacitor-community/bluetooth-le'
 import { isNativeShell } from '../platform/native'
 import { NativeBeaconScanner } from '../positioning/nativeScanner'
+import { headingFromOrientation, StepDetector, stepDisplacement } from '../positioning/pdr'
 import {
   SimulatedBeaconScanner,
   WebBluetoothBeaconScanner,
@@ -24,14 +25,48 @@ export function usePositioning(venue: Venue) {
   const engine = useRef<PositioningEngine | null>(null)
   const scanner = useRef<BeaconScanner | null>(null)
   const loop = useRef<ReturnType<typeof setInterval> | null>(null)
+  const motionCleanup = useRef<(() => void) | null>(null)
+  const [steps, setSteps] = useState(0)
 
   const stop = useCallback(() => {
     scanner.current?.stop()
     scanner.current = null
     if (loop.current) clearInterval(loop.current)
     loop.current = null
+    motionCleanup.current?.()
+    motionCleanup.current = null
     setWalkProgress(null)
   }, [])
+
+  /** Real phone sensors: accelerometer steps + OS-fused compass heading, fused into the engine. */
+  const startMotion = useCallback(() => {
+    if (typeof window === 'undefined' || !('DeviceMotionEvent' in window)) return
+    const detector = new StepDetector()
+    let heading: number | null = null
+    const onOrientation = (e: DeviceOrientationEvent) => {
+      heading = headingFromOrientation(e as DeviceOrientationEvent & { webkitCompassHeading?: number }) ?? heading
+    }
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.accelerationIncludingGravity
+      if (!a || a.x === null || a.y === null || a.z === null) return
+      const step = detector.push(a.x, a.y, a.z, e.timeStamp)
+      if (!step || heading === null) return
+      const [dx, dy] = stepDisplacement(heading, step.length, venue.anchor?.bearing ?? 0)
+      const p = engine.current?.applyStep(dx, dy, Date.now())
+      if (p) {
+        setPosition(p)
+        setSteps((n) => n + 1)
+      }
+    }
+    window.addEventListener('devicemotion', onMotion)
+    window.addEventListener('deviceorientationabsolute' as 'deviceorientation', onOrientation)
+    window.addEventListener('deviceorientation', onOrientation)
+    motionCleanup.current = () => {
+      window.removeEventListener('devicemotion', onMotion)
+      window.removeEventListener('deviceorientationabsolute' as 'deviceorientation', onOrientation)
+      window.removeEventListener('deviceorientation', onOrientation)
+    }
+  }, [venue.anchor?.bearing])
 
   useEffect(() => stop, [stop])
 
@@ -59,14 +94,18 @@ export function usePositioning(venue: Venue) {
     [venue.beacons, stop],
   )
 
-  const startBluetooth = useCallback(
-    () =>
-      run(
-        isNativeShell() ? new NativeBeaconScanner(venue.beacons, BleClient) : new WebBluetoothBeaconScanner(venue.beacons),
-        'ble',
-      ),
-    [run, venue.beacons],
-  )
+  const startBluetooth = useCallback(async () => {
+    // iOS gates motion sensors behind a permission prompt that must come from this user gesture.
+    const DME = (typeof window !== 'undefined' ? window.DeviceMotionEvent : undefined) as
+      | (typeof DeviceMotionEvent & { requestPermission?: () => Promise<string> })
+      | undefined
+    await DME?.requestPermission?.().catch(() => 'denied')
+    await run(
+      isNativeShell() ? new NativeBeaconScanner(venue.beacons, BleClient) : new WebBluetoothBeaconScanner(venue.beacons),
+      'ble',
+    )
+    startMotion()
+  }, [run, venue.beacons, startMotion])
 
   /** Walks a simulated person along `path`, generating noisy BLE sightings. */
   const startSimulatedWalk = useCallback(
@@ -75,9 +114,23 @@ export function usePositioning(venue: Venue) {
       const startedAt = Date.now()
       const total = pathLength(path)
       const where = () => pointAlong(path, ((Date.now() - startedAt) / 1000) * DEMO_WALK_SPEED)
+      // Simulated PDR: one step per 0.75 m travelled, along the true direction with a little heading noise.
+      let last = where()
+      let pending = 0
       return run(new SimulatedBeaconScanner(venue.beacons, where), 'simulated', () => {
         const travelled = ((Date.now() - startedAt) / 1000) * DEMO_WALK_SPEED
         setWalkProgress(Math.min(1, travelled / Math.max(total, 1)))
+        const now = where()
+        if (now && last && now.levelId === last.levelId) {
+          pending += Math.hypot(now.position[0] - last.position[0], now.position[1] - last.position[1])
+          const heading = (Math.atan2(now.position[0] - last.position[0], -(now.position[1] - last.position[1])) * 180) / Math.PI
+          while (pending >= 0.75) {
+            pending -= 0.75
+            const [dx, dy] = stepDisplacement(heading + (Math.random() - 0.5) * 8, 0.75)
+            if (engine.current?.applyStep(dx, dy, Date.now())) setSteps((n) => n + 1)
+          }
+        }
+        last = now
         if (travelled > total + 8) stop()
       })
     },
@@ -104,6 +157,7 @@ export function usePositioning(venue: Venue) {
     mode,
     error,
     walkProgress,
+    steps,
     startBluetooth,
     startSimulatedWalk,
     setManual,
