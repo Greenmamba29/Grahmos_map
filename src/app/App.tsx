@@ -26,6 +26,7 @@ import { distance, pointInPolygon } from '../indoor/geometry'
 import { venuePlaces, type Place } from '../indoor/search'
 import type { Point, Venue } from '../indoor/types'
 import { blockedNodesFor, parseVenue, serializeVenue } from '../indoor/venuePackage'
+import { importImdf } from '../indoor/imdf'
 import { storage } from '../lib/storage'
 import { useMesh } from '../hooks/useMesh'
 import { usePositioning } from '../hooks/usePositioning'
@@ -518,14 +519,11 @@ export function App() {
             setSheet('none')
           }}
           onImport={(file) => {
-            void file.text().then((text) => {
-              try {
-                const parsed = parseVenue(text)
-                void installVenue(parsed, `Imported "${parsed.name}"`, 'local').then(() => selectVenue(parsed.id))
-              } catch (e) {
-                flash(e instanceof Error ? e.message : 'Invalid venue package')
-              }
-            })
+            // IMDF archives (.zip) are converted, nav graph included; anything else is a grahmos.venue/1 package.
+            const isZip = /\.(zip|imdf)$/i.test(file.name) || file.type.includes('zip')
+            void (isZip ? file.arrayBuffer().then((b) => importImdf(new Uint8Array(b))) : file.text().then((text) => parseVenue(text)))
+              .then((parsed) => installVenue(parsed, `Imported "${parsed.name}"`, 'local').then(() => selectVenue(parsed.id)))
+              .catch((e: unknown) => flash(e instanceof Error ? e.message : 'Invalid venue package'))
           }}
           onExport={() => {
             const blob = new Blob([serializeVenue(venue)], { type: 'application/json' })

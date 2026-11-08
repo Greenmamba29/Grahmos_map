@@ -95,7 +95,7 @@ export function OfflineSheet(props: OfflineSheetProps) {
       <input
         ref={fileInput}
         type="file"
-        accept="application/json,.json"
+        accept="application/json,.json,application/zip,.zip,.imdf"
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0]
@@ -104,8 +104,9 @@ export function OfflineSheet(props: OfflineSheetProps) {
         }}
       />
       <p className="hint">
-        Venue packages use the <code>grahmos.venue/1</code> JSON schema: levels, spaces, amenities, navigation graph and BLE
-        beacons. Share them device-to-device from the Mesh panel.
+        Import a <code>grahmos.venue/1</code> package, or an IMDF archive (.zip) exported from indoor-mapping tools: units,
+        doors, levels and amenities are converted and a walking graph is generated. Share maps device-to-device from the
+        Mesh panel.
       </p>
     </section>
   )
