@@ -1,0 +1,8 @@
+# Verbatim upstream files compiled into the reference runner (copied by prepare.sh, never edited).
+bitchat/Sync/GCSFilter.swift
+bitchat/Sync/PacketIdUtil.swift
+bitchat/Sync/SyncTypeFlags.swift
+bitchat/Models/RequestSyncPacket.swift
+bitchat/Services/TransportConfig.swift
+bitchat/Services/BLE/BLEOutboundFragmentPlanner.swift
+bitchat/Services/BLE/BLEFragmentAssemblyBuffer.swift

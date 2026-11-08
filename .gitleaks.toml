@@ -6,9 +6,16 @@
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 description = "Generated upstream API contracts (public spec examples)"
 paths = [
   '''^src/core/api/[^/]+/contract\.json$''',
   '''^src/core/api/[^/]+/schema\.ts$''',
 ]
+
+# Vendored upstream snapshots (unmodified, pinned in third_party/*/UPSTREAM.md). Triaged 2026-11-08 for
+# bitchat 04995f6: 15 generic-api-key hits = 14 Swift type declarations (`let key: Curve25519...PrivateKey`)
+# and 1 public test-vector key in upstream's own test fixtures. Re-triage whenever the pin moves.
+[[allowlists]]
+description = "Vendored upstream snapshots (triaged; see third_party/*/UPSTREAM.md)"
+paths = ['''^third_party/bitchat/''']

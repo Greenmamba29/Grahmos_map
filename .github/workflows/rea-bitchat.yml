@@ -1,0 +1,42 @@
+# REA: record what UNMODIFIED bitchat (third_party/bitchat @ pinned SHA) does at our seams. The Swift runner
+# needs Apple frameworks (Compression, CryptoKit), so it runs on macOS. The golden is printed between markers
+# (readable from the job log) and uploaded; commit it to rea/bitchat/golden.json.
+name: rea-bitchat
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["rea/bitchat/**", "third_party/bitchat/**", ".github/workflows/rea-bitchat.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  characterize:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build the reference runner from verbatim upstream files
+        run: |
+          rea/bitchat/prepare.sh
+          swift --version
+          swift build -c release --package-path rea/bitchat/runner
+      - name: Characterize (fixtures -> golden from upstream)
+        run: |
+          node osa-kit/rea/rea.mjs characterize --fixtures rea/bitchat/fixtures.json \
+            --ref "$PWD/rea/bitchat/runner/.build/release/bitchat-ref" --out rea/bitchat/golden.json
+          echo "===GOLDEN-BEGIN==="
+          gzip -9c rea/bitchat/golden.json | base64
+          echo "===GOLDEN-END==="
+      - name: Verify the committed TypeScript port against the fresh golden
+        run: |
+          npm ci
+          node osa-kit/rea/rea.mjs verify --golden rea/bitchat/golden.json --port "node --experimental-strip-types rea/bitchat/port-cli.ts"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with: { name: bitchat-golden, path: rea/bitchat/golden.json, retention-days: 30 }
