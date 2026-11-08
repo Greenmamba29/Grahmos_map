@@ -1,63 +1,34 @@
 /// <reference lib="webworker" />
 
-import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { clientsClaim } from 'workbox-core'
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
+import { CacheFirst } from 'workbox-strategies'
+import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
-import {
-  CacheFirst,
-  NetworkFirst,
-  StaleWhileRevalidate,
-} from 'workbox-strategies'
 
 declare let self: ServiceWorkerGlobalScope
 
+/**
+ * Offline-first: the entire app shell, venue engine, router, positioning and
+ * mesh code are precached at install, so the app boots with zero network.
+ */
 self.skipWaiting()
 clientsClaim()
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
-registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  new NetworkFirst({
-    cacheName: 'resilience-pages',
-    networkTimeoutSeconds: 3,
-    plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
-  }),
-)
+// Serve the cached shell for every in-app navigation, online or not.
+registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
 
+// Venue packages published alongside the app (e.g. /venues/*.venue.json).
 registerRoute(
-  ({ url }) =>
-    url.hostname === 'tile.openstreetmap.org' ||
-    url.hostname === 'fonts.openmaptiles.org',
-  new StaleWhileRevalidate({
-    cacheName: 'resilience-map-assets',
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 1800, maxAgeSeconds: 30 * 24 * 60 * 60 }),
-    ],
-  }),
-)
-
-const rangeCacheKeyPlugin = {
-  cacheKeyWillBeUsed: async ({ request }: { request: Request }) => {
-    const range = request.headers.get('range')
-    if (!range) return request
-    const cacheKey = new URL(request.url)
-    cacheKey.searchParams.set('__resilience_range', range)
-    return cacheKey.toString()
-  },
-}
-
-registerRoute(
-  ({ url }) => url.pathname.endsWith('.pmtiles'),
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/venues/'),
   new CacheFirst({
-    cacheName: 'resilience-pmtiles-ranges',
+    cacheName: 'grahmos-venues',
     plugins: [
-      rangeCacheKeyPlugin,
-      new CacheableResponsePlugin({ statuses: [200, 206] }),
-      new ExpirationPlugin({ maxEntries: 4000, maxAgeSeconds: 90 * 24 * 60 * 60 }),
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 365 * 24 * 60 * 60 }),
     ],
   }),
 )

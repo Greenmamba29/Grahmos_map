@@ -9,4 +9,3 @@ coverage
 .DS_Store
 build/
 data/
-public/offline/*.pmtiles

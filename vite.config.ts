@@ -1,12 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
@@ -14,13 +12,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: null,
       manifest: {
-        name: 'Resilience Maps',
-        short_name: 'Resilience',
-        description: 'Offline critical infrastructure and terrain maps.',
+        name: 'GrahmOS Maps — Offline Indoor',
+        short_name: 'GrahmOS Maps',
+        description: 'Offline indoor maps, Bluetooth positioning and peer-to-peer mesh. No internet required.',
         theme_color: '#1A73E8',
         background_color: '#F6F8FB',
         display: 'standalone',
         start_url: '/',
+        orientation: 'portrait',
+        categories: ['navigation', 'utilities'],
         icons: [
           {
             src: '/icons/map-icon.svg',

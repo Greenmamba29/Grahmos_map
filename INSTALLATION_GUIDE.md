@@ -1,339 +1,177 @@
-# Resilience Maps installation and architecture guide
+# GrahmOS Maps: installation, architecture and protocols
 
-Resilience Maps is an offline-first field map for finding critical infrastructure when internet access is unreliable. The browser renders MapLibre vector maps from PMTiles archives, keeps region metadata and facility snapshots in IndexedDB, and synchronizes authoritative facility data with Supabase/PostGIS whenever connectivity returns.
-
-## Product surfaces
-
-### 1. Explore map (`/`)
-
-- Full-viewport MapLibre map with vector basemap, optional terrain DEM, facility symbols, downloaded-region outlines, and current-location marker.
-- Floating search bar with voice-search affordance and results for facility names, addresses, and categories.
-- Horizontal category chips for Hospitals, Schools, Shelters, Water, and Power.
-- Circular location and layers controls plus a primary route FAB.
-- Bottom navigation: Explore, Routes, Saved, Offline, Alerts.
-- Offline/sync status badge and an accessible fallback list for visible facilities.
-
-Primary components: `ExploreMap`, `SearchBar`, `CategoryChips`, `MapCanvas`, `MapControls`, `BottomNav`, `FacilityMarker`, `ConnectivityBadge`.
-
-### 2. Layers control
-
-- Stacked-square map control opens a right-side drawer on wide screens and a bottom drawer on phones.
-- Basemap choices: resilience/vector, terrain, and satellite when a licensed satellite package is present.
-- Per-category facility visibility toggles.
-- Toggle for downloaded-region boundaries and storage state.
-- Terrain mode enables hillshade and a DEM source; it must degrade cleanly when no terrain PMTiles URL is configured.
-
-Primary components: `LayersButton`, `LayersDrawer`, `LayerToggle`, `BasemapPicker`, `DownloadOverlayToggle`.
-
-### 3. Facility filters
-
-- Slide-up sheet launched from the filter button.
-- Pill filters for category, operating status, verified-only, open-now, and accessibility.
-- Segmented sort control: nearest, recently verified, capacity.
-- Distance/capacity range slider with a readable numeric value and reset/apply actions.
-- Filters update both the PostGIS query and locally cached facility results.
-
-Primary components: `FilterSheet`, `FilterPill`, `SegmentedControl`, `RangeField`.
-
-### 4. Facility detail
-
-- Bottom sheet with facility name, category, status, verification timestamp, distance, and capacity.
-- Action pills: Directions, Report Status, Save, Call.
-- Tabs: Overview, Capacity, Resources, Updates.
-- Offline report queue; queued reports synchronize after reconnecting.
-
-Primary components: `FacilitySheet`, `FacilityActions`, `FacilityTabs`, `ResourceList`, `StatusTimeline`, `QueuedReportForm`.
-
-### 5. Route and directions (`/routes/:id`)
-
-- Map preview with primary/alternate route lines and hazard overlays.
-- Travel modes: walk, drive, bicycle, emergency.
-- ETA, distance, ascent, and descent summary.
-- Elevation/terrain profile chart and numbered turn list.
-- Persistent warning banner for unverified or potentially blocked segments.
-- Preview and Show map actions. Route packages can be saved with the associated tiles and facilities.
-
-Primary components: `RouteMap`, `TravelModeTabs`, `RouteSummary`, `ElevationProfile`, `TurnList`, `RouteCaution`, `RouteActions`.
-
-### 6. Offline regions (`/offline`)
-
-- Downloaded-region list with name, bounds, zoom range, version, size, last verified time, and state icon.
-- “Download region for offline use” CTA opens a map bounding-box selector.
-- Live size estimate based on selected area, zooms, tile density, facility payload, and terrain inclusion.
-- Pause, resume, update, verify, and delete actions.
-- Storage quota meter and warning before downloads that exceed available browser storage.
-
-Primary components: `OfflineRegionsPage`, `RegionCard`, `RegionSelector`, `DownloadEstimate`, `StorageMeter`, `DownloadProgress`.
-
-### Supporting screens
-
-- Saved facilities and routes (`/saved`).
-- Alerts and hazard updates (`/alerts`).
-- Contribution/report queue (`/contribute`).
-- App settings, data freshness, emergency disclaimer, attribution, diagnostics, and cache reset (`/settings`).
-
-## Repository structure
-
-```text
-.
-├── INSTALLATION_GUIDE.md
-├── Dockerfile
-├── docker-compose.yml
-├── nginx/
-│   └── default.conf
-├── public/
-│   ├── icons/
-│   └── offline/
-│       └── README.md
-├── scripts/
-│   └── build-pmtiles.sh
-├── src/
-│   ├── app/
-│   │   └── App.tsx
-│   ├── components/
-│   │   ├── map/
-│   │   │   ├── MapCanvas.tsx
-│   │   │   └── LayersDrawer.tsx
-│   │   └── ui/
-│   │       ├── BottomNav.tsx
-│   │       ├── CategoryChips.tsx
-│   │       └── SearchBar.tsx
-│   ├── data/
-│   │   └── demoFacilities.ts
-│   ├── hooks/
-│   │   └── useFacilities.ts
-│   ├── lib/
-│   │   ├── offlineDb.ts
-│   │   └── supabase.ts
-│   ├── types/
-│   │   └── facilities.ts
-│   ├── main.tsx
-│   ├── service-worker.ts
-│   └── styles.css
-├── supabase/
-│   └── migrations/
-│       └── 20260812053410_create_facilities.sql
-├── .env.example
-├── package.json
-├── tsconfig*.json
-└── vite.config.ts
-```
-
-## Required packages
-
-Runtime:
-
-- `react`, `react-dom`: UI runtime.
-- `maplibre-gl`: WebGL map renderer.
-- `pmtiles`: MapLibre protocol adapter and range-request reader.
-- `@supabase/supabase-js`: facility synchronization and PostGIS RPC calls.
-- `idb`: typed IndexedDB cache for facilities, offline regions, reports, and preferences.
-- `lucide-react`: accessible map and navigation icons.
-
-Build/offline:
-
-- `vite`, `typescript`, `@vitejs/plugin-react`.
-- `tailwindcss`, `@tailwindcss/vite`.
-- `vite-plugin-pwa`, `workbox-core`, `workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration`.
-- `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, ESLint and TypeScript ESLint packages.
-
-Install with:
+## 1. Install and run
 
 ```bash
 npm install
-cp .env.example .env.local
+npm run dev         # development server
+npm test            # vitest (core engines + UI)
+npm run lint && npm run typecheck
+npm run build       # production PWA → dist/
+npm run preview     # serve dist/ locally (service worker active)
 ```
 
-## Environment variables
-
-```dotenv
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-VITE_VECTOR_PMTILES_URL=/offline/region.pmtiles
-VITE_TERRAIN_PMTILES_URL=/offline/terrain.pmtiles
-VITE_MAP_INITIAL_LNG=36.8219
-VITE_MAP_INITIAL_LAT=-1.2921
-VITE_MAP_INITIAL_ZOOM=11
-```
-
-Only publishable/legacy anon keys belong in browser variables. Never place a Supabase secret or `service_role` key in a `VITE_` variable.
-
-## Supabase/PostGIS data model
-
-The committed migration enables PostGIS, creates a public-read facility catalog, adds spatial/category indexes, and exposes a bounded nearby search function.
-
-Core columns:
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | generated primary key |
-| `name` | `text` | display/search name |
-| `category` | enum | hospital, school, shelter, water, power, communications |
-| `geom` | `geography(Point, 4326)` | WGS84 position; meters work naturally in distance queries |
-| `capacity` | `integer` | nullable, non-negative |
-| `status` | enum | operational, limited, closed, unknown |
-| `phone`, `address`, `resources` | text/jsonb | contact and available supplies/services |
-| `is_verified` | boolean | trusted confirmation marker |
-| `last_updated` | timestamptz | freshness timestamp |
-
-RLS is enabled because `public` is exposed through Supabase’s Data API. Anonymous and authenticated clients receive read-only access; field reports should later be written to a separate RLS-protected queue table rather than allowing public updates to authoritative facilities.
-
-Apply locally:
+Docker:
 
 ```bash
-npx supabase start
-npx supabase db reset
+docker compose up --build   # http://127.0.0.1:8080
 ```
 
-Apply to a linked project after reviewing the migration:
+No environment variables, API keys or backend are required. The build is a
+static site. Any HTTPS static host works (HTTPS is required for service workers
+and Web Bluetooth).
 
-```bash
-npx supabase login
-npx supabase link --project-ref YOUR_PROJECT_REF
-npx supabase db push
-```
+### Offline check
 
-## PMTiles generation pipeline
+1. Load the app once while online, and wait for "App installed for offline use"
+   in the **Offline** tab.
+2. Turn on airplane mode and reload. Map, search, directions, positioning and
+   the mesh between tabs keep working.
 
-### Vector basemap
+## 2. Product surfaces
 
-1. Download a regional `.osm.pbf` extract from Geofabrik or produce one with `osmium extract`.
-2. Build a vector MBTiles archive with Planetiler and an OpenMapTiles-compatible profile.
-3. Convert MBTiles to PMTiles and inspect the result.
-4. Copy the archive into `public/offline/` for a bundled pilot region, or host it on object storage/CDN with HTTP byte-range support.
+| Surface | What it shows |
+| --- | --- |
+| **Explore** | Full-screen floor plan, search bar, quick "find nearest" chips (Exits, Restrooms, Medical, Food, Water, Elevators), floor picker, locate / nearest-exit / directions buttons, and a status badge. |
+| **Place sheet** | Name, category and level, plus any active hazards inside the place. Actions: Directions, I'm here (manual position), Report. |
+| **Directions** | Origin (your location or any place) and destination, swap, step-free toggle, ETA, distance and floors, turn-by-turn steps (tap a step to focus it), and a "Simulate walk" demo that drives the BLE positioning pipeline. |
+| **Mesh** | One-tap SOS, closure, hazard and note reports; the link list with status; "Connect relay node"; "Share map"; shared reports with resolve; nearby people; broadcast messages; editable callsign. |
+| **Offline** | Offline readiness, connectivity, storage use with eviction protection, the venue library (switch or delete), and venue package import/export. |
 
-The included script expects Docker, curl, and the PMTiles CLI:
+## 3. Venue package schema (`grahmos.venue/1`)
 
-```bash
-REGION=kenya \
-PBF_URL=https://download.geofabrik.de/africa/kenya-latest.osm.pbf \
-./scripts/build-pmtiles.sh
-```
+Local metric coordinates: metres, with x growing east and y growing south. The
+optional `anchor` places the venue on Earth for GPS handoff.
 
-For production, pin and audit a Planetiler profile/tag rather than using a floating image. Preserve OpenStreetMap attribution and the source extract timestamp in release metadata.
-
-### Terrain archive
-
-Terrain is a separate raster-dem PMTiles archive:
-
-1. Download Copernicus DEM GLO-30, Mapzen/Tilezen Terrarium, or another licensed DEM for the same bounds.
-2. Mosaic and reproject to Web Mercator with GDAL.
-3. Encode elevation as Mapbox Terrain-RGB (`height = -10000 + (R*256*256 + G*256 + B) * 0.1`) using `rio-rgbify`.
-4. Tile the RGB GeoTIFF to MBTiles for the required zoom range.
-5. Convert with `pmtiles convert terrain.mbtiles terrain.pmtiles`.
-6. Set `VITE_TERRAIN_PMTILES_URL`; MapLibre uses it as a `raster-dem` source for hillshade and terrain.
-
-Example tool sequence (adapt bounds/resolution to the region):
-
-```bash
-gdalbuildvrt build/dem.vrt data/dem/*.tif
-gdalwarp -t_srs EPSG:3857 -r bilinear -co TILED=YES build/dem.vrt build/dem-3857.tif
-rio rgbify -b -10000 -i 0.1 build/dem-3857.tif build/dem-rgb.tif
-rio mbtiles build/dem-rgb.tif build/terrain.mbtiles --format PNG --zoom-levels 6..14
-pmtiles convert build/terrain.mbtiles public/offline/terrain.pmtiles
-```
-
-DEM redistribution rights vary by source. Verify the license before packaging or hosting terrain data.
-
-### Facility import
-
-Use `osmium tags-filter` or Overpass to extract hospitals, clinics, schools, shelters, drinking-water points, substations/generators, and communications towers. Normalize OSM tags into the facility enums, keep the OSM object ID as `source_id`, and load points using `COPY`/`ogr2ogr`. Polygon facilities should use a representative point (`ST_PointOnSurface`) for mobile discovery while retaining source geometry in a private/import schema if needed.
-
-## Offline architecture
-
-- App shell: Workbox precache manifest generated during `npm run build`.
-- Remote style/sprite/font requests: stale-while-revalidate.
-- PMTiles: cache successful HTTP range responses; region downloads should additionally persist archive chunks or a complete archive through the File System Access/OPFS path where available.
-- Facility snapshots and region metadata: IndexedDB via `idb`.
-- Writes such as status reports: IndexedDB outbox with Background Sync when supported and foreground retry otherwise.
-- Map startup order: bundled/cached facilities first, Supabase refresh second, then update the cache and visible source.
-- A downloaded region is not “ready” until vector archive, optional DEM, facilities, style assets, and integrity/version metadata all verify successfully.
-
-Browser storage is quota-managed and may be evicted. Production mobile deployments should request persistent storage with `navigator.storage.persist()` and clearly show whether it was granted.
-
-## Local development
-
-Prerequisites: Node 22+, npm 10+, Docker with Compose, and optionally the Supabase CLI.
-
-```bash
-git clone YOUR_REPOSITORY_URL
-cd Grahmos_map
-npm install
-cp .env.example .env.local
-npm run dev
-```
-
-Open `http://localhost:5173`. Without Supabase variables, the app uses a small built-in facility dataset. Without PMTiles variables, it uses a network OpenStreetMap fallback that Workbox can cache; this fallback is useful for development but is not a complete offline region.
-
-Quality checks:
-
-```bash
-npm run typecheck
-npm run lint
-npm test
-npm run build
-npm run preview
-```
-
-Test offline behavior in a production build because service workers are disabled during ordinary Vite development. In browser developer tools, install the PWA, load a region, switch the network to Offline, reload, and verify the map, facilities, controls, and attribution.
-
-## VPS deployment with Docker and nginx
-
-### Build and start
-
-1. Point DNS to the VPS and allow ports 80/443.
-2. Clone the repository and create `.env.production`.
-3. Ensure PMTiles are either in `public/offline` before image build or mounted at `/usr/share/nginx/html/offline`.
-4. Build and run:
-
-```bash
-docker compose up -d --build
-docker compose ps
-curl -I http://127.0.0.1:8080
-```
-
-The multi-stage image compiles the Vite application and serves static files through nginx. SPA routes fall back to `index.html`; immutable assets are cached aggressively while the service worker and HTML are not.
-
-### PMTiles range requests
-
-nginx serves static files with byte ranges by default. Keep `Accept-Ranges: bytes`, avoid compression of `.pmtiles`, and expose `Content-Range`, `Accept-Ranges`, and `ETag` when the archive is hosted on a different origin. Cross-origin object storage must allow `GET`, `HEAD`, and the `Range` request header.
-
-### TLS
-
-Run a host-level reverse proxy (Caddy, Traefik, or nginx + Certbot) in front of port 8080. Service workers and geolocation require HTTPS outside localhost. Example host nginx proxy:
-
-```nginx
-server {
-  listen 443 ssl http2;
-  server_name maps.example.org;
-
-  ssl_certificate /etc/letsencrypt/live/maps.example.org/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/maps.example.org/privkey.pem;
-
-  location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto https;
-  }
+```jsonc
+{
+  "schema": "grahmos.venue/1",
+  "id": "my-venue",                 // [a-z0-9-_.]
+  "name": "My Venue",
+  "version": 3,                     // newer versions replace older ones over the mesh
+  "updatedAt": "2026-11-01T00:00:00Z",
+  "anchor": { "lng": -122.4, "lat": 37.7, "bearing": 0 },
+  "levels":   [{ "id": "L1", "name": "Ground", "shortName": "1", "ordinal": 0, "outline": [[0,0],[80,0],[80,50],[0,50]] }],
+  "spaces":   [{ "id": "cafe", "levelId": "L1", "name": "Cafe", "category": "food",
+                 "polygon": [[0,28],[16,28],[16,50],[0,50]], "entranceNodeId": "cafe:node", "keywords": ["coffee"] }],
+  "amenities":[{ "id": "aed-1", "levelId": "L1", "name": "AED", "category": "aed", "position": [37,23], "nodeId": "c39" }],
+  "nodes":    [{ "id": "cafe:node", "levelId": "L1", "position": [8,39], "kind": "room" }],
+  "edges":    [{ "from": "cafe:node", "to": "c8", "kind": "walk" },
+               { "from": "lift-L1", "to": "lift-L2", "kind": "elevator", "seconds": 35 }],
+  "beacons":  [{ "id": "b1", "levelId": "L1", "position": [6,25], "txPower": -59,
+                 "ibeacon": { "uuid": "f7826da6-…", "major": 1, "minor": 1 } }]
 }
 ```
 
-### Release checklist
+- Space categories: `room corridor lobby restroom elevator stairs food medical retail office conference utility security shelter`.
+- Amenity categories: `exit aed first-aid fire-extinguisher information water charging assembly`.
+- Walk edges cost `length / 1.3 m/s`. Vertical edges need an explicit `seconds`. `stairs` edges are skipped in step-free mode.
+- Packages are validated (`parseVenue`) before they are stored, whether they come from a file or a peer.
+- The schema follows the venue → level → unit/amenity/opening structure of the
+  open Indoor Mapping Data Format (IMDF), so converting IMDF or OSM Simple Indoor
+  Tagging exports is a straightforward mapping step.
 
-- Confirm HTTPS, geolocation, service-worker registration, and update behavior.
-- Verify all configured PMTiles URLs support byte ranges and have immutable versioned names.
-- Test a cold offline launch on each target browser.
-- Check OSM/data-provider attribution and DEM/satellite licenses.
-- Run Supabase security and performance advisors; confirm RLS and grants.
-- Back up Supabase and retain the previous PMTiles manifests for rollback.
-- Monitor cache errors, tile range failures, stale facility counts, and report outbox depth without collecting sensitive precise-location history.
+## 4. Positioning pipeline
 
-## Implementation sequence
+1. **Scan.** Advertisements come from `WebBluetoothBeaconScanner`, a native
+   shell, or `SimulatedBeaconScanner`, and are resolved to venue beacons by
+   iBeacon UUID/major/minor or Eddystone namespace/instance.
+2. **Filter.** Keep a 2.5 s sliding window and take the median RSSI per beacon,
+   which rejects multipath spikes.
+3. **Floor.** The level with the strongest top-3 summed signal wins. It must win
+   twice in a row (hysteresis) to switch floors.
+4. **Range.** Distance = `10^((txPower − rssi) / (10·n))`, with `n = 2.2` by
+   default.
+5. **Solve.** Gauss-Newton weighted least squares (weights 1/d²) with
+   Levenberg damping, seeded at the weighted centroid. One or two beacons
+   degrade to the centroid.
+6. **Smooth.** A Kalman filter whose measurement variance comes from the solver
+   residual. The reported accuracy circle is √variance.
 
-1. Explore map, category chips, search shell, location control, bottom navigation.
-2. PMTiles/vector and terrain source configuration, layers drawer, facility markers.
-3. IndexedDB facility cache, sync state, and Workbox production service worker.
-4. Filter and facility detail sheets.
-5. Offline region selector/download manager and quota handling.
-6. Routing engine integration, terrain profile, hazard overlays, saved routes.
-7. Reports/outbox, alerts, accessibility audit, offline failure testing, and operational telemetry.
+Tests show under 5 m error with 3 dB noise in the demo venue, and correct floor
+switching.
+
+## 5. Mesh protocol (v1)
+
+### Envelope
+
+Every frame is a UTF-8 JSON envelope:
+
+```json
+{ "v": 1, "id": "9f2c…", "origin": "a1b2c3d4e5f6", "ttl": 6, "hops": 0,
+  "hlc": "0lz8k2m1c0:0000:a1b2c3d4e5f6", "body": { "kind": "ops", "entries": [ … ] } }
+```
+
+| `body.kind` | Purpose | Default TTL |
+| --- | --- | --- |
+| `hello` | Name and venue. Also a 15 s heartbeat. Newcomers get a hello back. | 0 |
+| `digest` | `{key: hlc}` summary for anti-entropy. A receiver replies with missing `ops` and, if it is itself behind, a `reply` digest. | 0 |
+| `ops` | Last-writer-wins CRDT entries `{key, value: Annotation, hlc}` | 6 |
+| `presence` | Live position, level and accuracy (expires after 90 s) | 3 |
+| `text` | Broadcast message (≤ 500 chars) | 6 |
+| `venue` | Whole venue package | 2 |
+
+Relay rules: drop frames whose `id` has been seen or whose `origin` is self.
+Reject HLCs more than 24 h ahead. Otherwise handle the frame and, if `ttl > 0`,
+forward it with `ttl − 1, hops + 1` on every link except the one it came in on.
+
+### Chunked framing for constrained links
+
+For BLE GATT (and LoRa or serial bridges), each frame is split into packets:
+
+```
+u16 seq (big-endian) | u16 index | u16 total | payload bytes…
+```
+
+The default packet size is 180 bytes (use 20 for links without MTU exchange).
+Receivers reassemble packets in any order and drop partials after 15 s.
+
+### BLE relay node (Nordic UART Service)
+
+| Characteristic | UUID | Direction |
+| --- | --- | --- |
+| Service | `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | |
+| RX | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | phone → relay (write) |
+| TX | `6e400003-b5a3-f393-e0a9-e50e24dcca9e` | relay → phone (notify) |
+
+A relay is any ESP32 or nRF52 board running the standard Nordic UART profile
+under an advertised name starting with `GrahmOS`. It forwards packets it
+receives from one phone to every other connected phone, and over its long-range
+fabric (ESP-NOW, BLE Mesh, or LoRa via projects such as Meshtastic) to other
+relays. Relays do not need to parse JSON. Forwarding packets byte for byte is
+enough, because dedupe and TTL are enforced on the phones. The browser
+reconnects on its own with exponential backoff when a relay goes out of range.
+
+### Open-source building blocks
+
+The mesh is designed to plug into these open projects:
+
+- **Meshtastic.** LoRa mesh firmware for ESP32/nRF52, used as a long-range
+  backbone between relays.
+- **Nordic UART Service / Zephyr / ESP-IDF NimBLE.** Relay firmware base.
+- **Bitchat-style BLE store-and-forward.** Phone-to-phone over BLE in a native
+  shell, using the same envelope and chunk format.
+- **IMDF / OpenStreetMap Simple Indoor Tagging.** Venue data sources.
+
+## 6. Storage
+
+The IndexedDB database `grahmos-indoor` has these stores:
+
+- `venues`: venue packages.
+- `annotations`: CRDT entries, persisted 400 ms after each change.
+- `settings`: the active venue.
+
+The callsign lives in `localStorage`. The peer id lives in `sessionStorage`, so
+each tab is its own mesh node.
+
+## 7. Roadmap
+
+- A native shell (Capacitor) for background beacon scanning and peer-to-peer
+  BLE/Wi-Fi Aware on iOS and Android.
+- Signed envelopes (Ed25519 per device) with a trust list for authoritative
+  closures.
+- Pedestrian dead reckoning (accelerometer and compass) fused with BLE in the
+  Kalman filter.
+- IMDF zip importer and a floor-plan editor.
+- A WebRTC transport for phone-to-phone links over local Wi-Fi without
+  internet.
