@@ -1,0 +1,16 @@
+{
+  "name": "@grahmos/capacitor-ble-mesh",
+  "version": "0.1.0",
+  "description": "Phone-to-phone BLE mesh link for GrahmOS Maps: every phone advertises a GATT service and connects to nearby phones (dual role), so the mesh works with no relay hardware.",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": ["android/src/main/", "android/build.gradle", "ios/Sources", "Package.swift", "index.js", "index.d.ts"],
+  "capacitor": {
+    "ios": { "src": "ios" },
+    "android": { "src": "android" }
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  }
+}

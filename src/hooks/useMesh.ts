@@ -7,6 +7,8 @@ import { BleClient } from '@capacitor-community/bluetooth-le'
 import { BluetoothRelayTransport } from '../mesh/transports/bluetoothGatt'
 import { NativeBluetoothRelayTransport } from '../mesh/transports/nativeRelay'
 import { RtcLinkManager } from '../mesh/transports/webrtc'
+import { PeerBleTransport } from '../mesh/transports/peerBle'
+import { GrahmosBleMesh } from '../platform/bleMesh'
 import { storage } from '../lib/storage'
 
 export interface Identity {
@@ -104,6 +106,13 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
     const tabs = new BroadcastChannelTransport()
     node.addTransport(tabs)
     void tabs.start()
+    // Native shells: phones link to each other directly over Bluetooth (no relay needed).
+    let phones: PeerBleTransport | null = null
+    if (isNativeShell()) {
+      phones = new PeerBleTransport(GrahmosBleMesh)
+      node.addTransport(phones)
+      void phones.start().catch(() => {})
+    }
     // Upgrade neighbours to direct WebRTC links (fast LAN path for venue maps); signalling rides the mesh.
     const rtc = typeof RTCPeerConnection === 'undefined' ? null : new RtcLinkManager(node)
     const interval = setInterval(() => {
@@ -114,6 +123,7 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
       cancelled = true
       clearInterval(interval)
       rtc?.close()
+      if (phones) node.removeTransport(phones)
       node.removeTransport(tabs)
     }
   }, [node])
