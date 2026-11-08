@@ -1,25 +1,31 @@
-import { LwwMap, type LwwEntry } from './crdt'
-import { HybridLogicalClock } from './hlc'
+import { LwwMap } from './crdt'
+import { HybridLogicalClock, decodeHlc } from './hlc'
+import { peerIdFor, signPayload, verifyPayload, type DeviceKey } from './identity'
 import {
   MESH_PROTOCOL_VERSION,
   decodeEnvelope,
   encodeEnvelope,
   randomId,
+  signedPart,
   type Annotation,
   type MeshBody,
   type MeshEnvelope,
   type PeerPresence,
+  type SignedEntry,
 } from './protocol'
 import type { MeshTransport } from './transport'
 
 export interface MeshNodeOptions {
-  peerId: string
+  /** Ed25519 identity; the node's peer id is derived from its public key. */
+  key: DeviceKey
   name: string
   venueId?: string
   now?: () => number
   /** Default flood radius in hops. */
   defaultTtl?: number
-  initialAnnotations?: LwwEntry<Annotation>[]
+  initialAnnotations?: SignedEntry[]
+  /** Peer ids whose reports are marked trusted (e.g. venue staff). */
+  trusted?: Iterable<string>
 }
 
 export interface MeshStats {
@@ -28,6 +34,8 @@ export interface MeshStats {
   relayed: number
   duplicates: number
   rejected: number
+  /** Envelopes or CRDT entries whose signature, key or authorship did not check out. */
+  forged: number
 }
 
 export interface MeshMessage {
@@ -55,11 +63,13 @@ const PRESENCE_TTL_MS = 90 * 1000
  */
 export class MeshNode {
   readonly peerId: string
+  readonly publicHex: string
   name: string
   venueId?: string
   readonly clock: HybridLogicalClock
-  readonly annotations: LwwMap<Annotation>
-  readonly stats: MeshStats = { sent: 0, received: 0, relayed: 0, duplicates: 0, rejected: 0 }
+  readonly annotations: LwwMap<Annotation, SignedEntry>
+  readonly stats: MeshStats = { sent: 0, received: 0, relayed: 0, duplicates: 0, rejected: 0, forged: 0 }
+  readonly trusted: Set<string>
   readonly messages: MeshMessage[] = []
   onVenue: (venue: unknown, from: string) => void = () => {}
 
@@ -70,15 +80,37 @@ export class MeshNode {
   private readonly now: () => number
   private readonly defaultTtl: number
   private version = 0
+  private readonly key: DeviceKey
 
   constructor(options: MeshNodeOptions) {
-    this.peerId = options.peerId
+    this.key = options.key
+    this.peerId = options.key.peerId
+    this.publicHex = options.key.publicHex
+    this.trusted = new Set(options.trusted)
     this.name = options.name
     this.venueId = options.venueId
     this.now = options.now ?? (() => Date.now())
     this.defaultTtl = options.defaultTtl ?? 6
     this.clock = new HybridLogicalClock(this.peerId, this.now)
-    this.annotations = new LwwMap(options.initialAnnotations)
+    this.annotations = new LwwMap<Annotation, SignedEntry>()
+    if (options.initialAnnotations) this.restore(options.initialAnnotations)
+  }
+
+  setTrusted(peerId: string, trusted: boolean) {
+    if (trusted) this.trusted.add(peerId)
+    else this.trusted.delete(peerId)
+    this.emit()
+  }
+
+  /** Peer id that wrote the current version of an annotation (verified on merge). */
+  writerOf(annotationId: string): string | undefined {
+    const entry = this.annotations.all().find((e) => e.key === annotationId)
+    return entry ? decodeHlc(entry.hlc)?.node : undefined
+  }
+
+  /** Signed entries as stored, for persistence. */
+  signedEntries(): SignedEntry[] {
+    return this.annotations.all()
   }
 
   setVenue(venueId: string | undefined) {
@@ -144,7 +176,7 @@ export class MeshNode {
   }
 
   private envelope(body: MeshBody, ttl = this.defaultTtl): MeshEnvelope {
-    return {
+    const unsigned = {
       v: MESH_PROTOCOL_VERSION,
       id: randomId(),
       origin: this.peerId,
@@ -152,7 +184,15 @@ export class MeshNode {
       hops: 0,
       hlc: this.clock.tick(),
       body,
+      pub: this.publicHex,
     }
+    return { ...unsigned, sig: signPayload(this.key, signedPart(unsigned)) }
+  }
+
+  private signEntry(annotation: Annotation): SignedEntry {
+    const hlc = this.clock.tick()
+    const sig = signPayload(this.key, { key: annotation.id, value: annotation, hlc })
+    return { key: annotation.id, value: annotation, hlc, pub: this.publicHex, sig }
   }
 
   private broadcast(envelope: MeshEnvelope, except?: MeshTransport) {
@@ -174,7 +214,7 @@ export class MeshNode {
 
   /** Creates or updates an annotation locally and floods it to the mesh. */
   publishAnnotation(annotation: Annotation) {
-    const entry: LwwEntry<Annotation> = { key: annotation.id, value: annotation, hlc: this.clock.tick() }
+    const entry = this.signEntry(annotation)
     this.annotations.merge(entry)
     this.broadcast(this.envelope({ kind: 'ops', entries: [entry] }))
     this.emit()
@@ -182,9 +222,9 @@ export class MeshNode {
   }
 
   /** Merges entries from local storage or an import; emits when state changed. */
-  restore(entries: LwwEntry<Annotation>[]) {
+  restore(entries: unknown[]) {
     let changed = false
-    for (const entry of entries) if (isAnnotationEntry(entry)) changed = this.annotations.merge(entry) || changed
+    for (const entry of entries) if (verifiedEntry(entry)) changed = this.annotations.merge(entry) || changed
     if (changed) this.emit()
     return changed
   }
@@ -264,6 +304,13 @@ export class MeshNode {
       this.stats.duplicates++
       return
     }
+    // Authenticate before anything else touches the envelope. A forged copy is NOT marked seen, so it
+    // can't shadow the genuine message with the same id when that arrives later.
+    if (peerIdFor(envelope.pub) !== envelope.origin || !verifyPayload(envelope.pub, envelope.sig, signedPart(envelope))) {
+      this.stats.forged++
+      this.stats.rejected++
+      return
+    }
     if (!this.clock.receive(envelope.hlc)) {
       this.stats.rejected++
       return
@@ -308,7 +355,10 @@ export class MeshNode {
       case 'ops': {
         let changed = false
         for (const entry of body.entries ?? []) {
-          if (!isAnnotationEntry(entry)) continue
+          if (!verifiedEntry(entry)) {
+            this.stats.forged++
+            continue
+          }
           changed = this.annotations.merge(entry) || changed
         }
         return changed
@@ -353,8 +403,23 @@ export class MeshNode {
   }
 }
 
-function isAnnotationEntry(entry: unknown): entry is LwwEntry<Annotation> {
-  const e = entry as LwwEntry<Annotation>
+/**
+ * A CRDT entry is accepted only if its signature covers exactly { key, value, hlc }, the HLC's node is the
+ * signer's peer id, and the signer is the author — or the entry only marks the report resolved (any
+ * responder may clear a hazard; nobody can create or edit one in someone else's name).
+ */
+export function verifiedEntry(entry: unknown): entry is SignedEntry {
+  if (!isAnnotationEntry(entry)) return false
+  const e = entry as SignedEntry
+  if (typeof e.pub !== 'string' || typeof e.sig !== 'string') return false
+  const signer = peerIdFor(e.pub)
+  if (decodeHlc(e.hlc)?.node !== signer) return false
+  if (e.value.author !== signer && e.value.resolved !== true) return false
+  return verifyPayload(e.pub, e.sig, { key: e.key, value: e.value, hlc: e.hlc })
+}
+
+function isAnnotationEntry(entry: unknown): boolean {
+  const e = entry as SignedEntry
   return (
     typeof e?.key === 'string' &&
     typeof e.hlc === 'string' &&

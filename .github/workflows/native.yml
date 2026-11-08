@@ -1,0 +1,63 @@
+# Native shells: builds the Capacitor Android APK (every push) and the iOS app (manual) so the BLE
+# beacon positioning and relay mesh can be installed on real phones. No signing secrets are used:
+# the APK is a debug build and the iOS build is unsigned (sign in Xcode for a device).
+name: native
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["src/**", "android/**", "ios/**", "capacitor.config.ts", "package.json", "package-lock.json", "vite.config.ts", "vite-plugins/**", ".github/workflows/native.yml"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      ios:
+        description: "Also build the iOS app (macOS runner)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - name: Build web app and sync it into the Android project
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: grahmos-maps-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  ios:
+    if: github.event_name == 'workflow_dispatch' && inputs.ios
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Build web app and sync it into the iOS project
+        run: |
+          npm ci
+          npm run build
+          npx cap sync ios
+      - name: Build for the simulator (unsigned)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build

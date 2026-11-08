@@ -1,0 +1,154 @@
+# OSA gate in GitHub Actions: the same osa-gate.mjs as local, plus the sourced engines that need open
+# network (gitleaks, osv-scanner, nuclei, OpenSSF Scorecard, wasm-pack). Copy to .github/workflows/.
+#
+# HIL: active pen testing and repo sourcing scans run only by manual dispatch, and active scans also
+# require the "security-approval" environment (add required reviewers in repo Settings -> Environments).
+name: osa-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1" # weekly sweep (Mon 06:17 UTC): catches new CVEs in unchanged code
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployed URL to scan (must be listed in osa.targets.json -> owned)"
+        required: false
+      active:
+        description: "Run the active nuclei scan (needs security-approval)"
+        type: boolean
+        default: false
+      candidate_repo:
+        description: "Sourcing: score an open-source repo with OpenSSF Scorecard (owner/repo)"
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  GITLEAKS_VERSION: v8.30.1
+  OSV_VERSION: v2.6.0
+  NUCLEI_VERSION: v3.11.1
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install app + sourced engines
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          # Install exactly what's committed: a plain `bun install` can re-resolve and still pass.
+          # The package manager follows the committed lockfile (GrahmOS Maps is npm, 2026-11-08).
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then bun install --frozen-lockfile; else npm ci; fi
+          npm i --no-save axe-core
+          pip install semgrep actionlint-py shellcheck-py playwright pillow
+          python -m playwright install --with-deps chromium
+          mkdir -p "$HOME/.local/bin" && cd /tmp
+          gh release download "$GITLEAKS_VERSION" -R gitleaks/gitleaks -p '*linux_x64.tar.gz' && tar xzf gitleaks_*.tar.gz gitleaks && mv gitleaks "$HOME/.local/bin/"
+          gh release download "$OSV_VERSION" -R google/osv-scanner -p 'osv-scanner_linux_amd64' && chmod +x osv-scanner_linux_amd64 && mv osv-scanner_linux_amd64 "$HOME/.local/bin/osv-scanner"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Start dev server
+        run: |
+          npx vite dev --port 4175 --host 127.0.0.1 > /tmp/dev.log 2>&1 &
+          for _ in $(seq 1 60); do curl -sf http://127.0.0.1:4175/ >/dev/null && break; sleep 2; done
+      - name: Run gate
+        # The dispatch input reaches the shell as data (env), never spliced into the script.
+        env: { TARGET: "${{ inputs.target }}" }
+        run: |
+          args=(--e2e http://127.0.0.1:4175 --json .osa/gate.json --shots .osa/shots)
+          if [ -n "$TARGET" ]; then args+=(--target "$TARGET"); fi
+          node osa-kit/gate/osa-gate.mjs "${args[@]}"
+      - name: Report gate results
+        # Surface every FAIL/WARN as a run annotation and a job summary, so a red run is readable from the
+        # Actions page, a phone notification or the API without downloading logs or artifacts.
+        if: always()
+        run: |
+          [ -f .osa/gate.json ] || { echo "::error title=osa-gate::no report written (gate crashed before finishing)"; exit 0; }
+          python3 - <<'EOF'
+          import json, os
+          d = json.load(open(".osa/gate.json"))
+          rows = [f"## OSA gate: {d['verdict']}", "", "| | check | summary |", "|---|---|---|"]
+          for r in d["results"]:
+              s = r["status"]
+              rows.append(f"| {s.upper()} | {r['id']} | {r['summary']} |")
+              if s in ("fail", "warn"):
+                  det = (r.get("details") or "").strip().replace("%", "%25").replace("\r", "").replace("\n", "%0A")[:900]
+                  lvl = "error" if s == "fail" else "warning"
+                  print(f"::{lvl} title=osa-gate {r['id']}::{r['summary']}" + (f"%0A{det}" if det else ""))
+          open(os.environ["GITHUB_STEP_SUMMARY"], "a").write("\n".join(rows) + "\n")
+          EOF
+      - name: Upload report
+        # Annotations + job summary above are the record; the artifact is a convenience. A full artifact
+        # quota (account-wide) must not turn a GREEN gate red, and 7-day retention keeps the quota from filling.
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 7
+          name: osa-gate-report
+          path: |
+            .osa/gate.json
+            .osa/shots
+            .osa/gate-history.jsonl
+
+  wasm:
+    # Adapter "wasm" route: any Rust crate under adapters/wasm/<name> becomes src/core/wasm/<name> (TS bindings).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: has
+        run: echo "any=$(ls adapters/wasm/*/Cargo.toml >/dev/null 2>&1 && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.has.outputs.any == 'true'
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo install wasm-pack --locked
+          for c in adapters/wasm/*/; do
+            n=$(basename "$c")
+            wasm-pack build "$c" --target web --release --out-dir "$PWD/src/core/wasm/$n"
+          done
+      - if: steps.has.outputs.any == 'true'
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with: { name: wasm-bindings, path: src/core/wasm, retention-days: 7 }
+
+  dast-active:
+    if: github.event_name == 'workflow_dispatch' && inputs.active && inputs.target != ''
+    needs: gate
+    runs-on: ubuntu-latest
+    environment: security-approval # HIL: a required reviewer must approve before attack-shaped traffic is sent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - env: { GH_TOKEN: "${{ github.token }}", TARGET: "${{ inputs.target }}" }
+        run: |
+          cd /tmp && gh release download "$NUCLEI_VERSION" -R projectdiscovery/nuclei -p '*linux_amd64.zip' && unzip -o nuclei_*_linux_amd64.zip nuclei && sudo mv nuclei /usr/local/bin/
+          cd "$GITHUB_WORKSPACE" && node osa-kit/gate/osa-gate.mjs --only dast,dast-active --target "$TARGET" --active --json .osa/dast.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with: { name: osa-dast-report, path: .osa/dast.json, retention-days: 30 }
+
+  source-scorecard:
+    # Sourcing step: score a candidate open-source repo before OSA adopts it (maintenance, CI, security practices).
+    if: github.event_name == 'workflow_dispatch' && inputs.candidate_repo != ''
+    runs-on: ubuntu-latest
+    steps:
+      - env: { GITHUB_AUTH_TOKEN: "${{ github.token }}", CANDIDATE: "${{ inputs.candidate_repo }}" }
+        run: |
+          docker run --rm -e GITHUB_AUTH_TOKEN gcr.io/openssf/scorecard:stable \
+            --repo="github.com/$CANDIDATE" --format json > scorecard.json
+          python3 -c "import json;d=json.load(open('scorecard.json'));print('SCORE',d['score']);[print(f\"{c['score']:>3} {c['name']}\") for c in d['checks']]"
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with: { name: scorecard, path: scorecard.json, retention-days: 30 }

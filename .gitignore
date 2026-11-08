@@ -9,3 +9,4 @@ coverage
 .DS_Store
 build/
 data/
+.osa/

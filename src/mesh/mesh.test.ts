@@ -2,14 +2,27 @@ import { describe, expect, it } from 'vitest'
 import { seededRandom } from '../positioning/scanners'
 import { LwwMap } from './crdt'
 import { HybridLogicalClock, decodeHlc } from './hlc'
-import { MeshNode } from './node'
-import { ChunkAssembler, chunkFrame, type Annotation } from './protocol'
+import { generateKey, signPayload, type DeviceKey } from './identity'
+import { MeshNode, verifiedEntry } from './node'
+import { ChunkAssembler, chunkFrame, decodeEnvelope, encodeEnvelope, signedPart, type Annotation, type SignedEntry } from './protocol'
 import { MemoryTransport } from './transports/memory'
 
-function annotation(id: string, text: string, overrides: Partial<Annotation> = {}): Annotation {
+/** Deterministic Ed25519 key per test name, so failures reproduce. */
+function keyFor(seed: string): DeviceKey {
+  const bytes = new Uint8Array(32)
+  for (let i = 0; i < seed.length; i++) bytes[i % 32] = (bytes[i % 32] + seed.charCodeAt(i) * (i + 1)) & 0xff
+  bytes[31] ^= seed.length
+  return generateKey(bytes)
+}
+
+function meshNode(seed: string, name = seed, venueId: string | undefined = 'v') {
+  return new MeshNode({ key: keyFor(seed), name, venueId })
+}
+
+function annotation(author: MeshNode, id: string, text: string, overrides: Partial<Annotation> = {}): Annotation {
   return {
     id, venueId: 'v', type: 'closure', levelId: 'L1', position: [10, 10], radius: 3, text,
-    author: 'a', authorName: 'A', createdAt: 0, resolved: false, ...overrides,
+    author: author.peerId, authorName: author.name, createdAt: 0, resolved: false, ...overrides,
   }
 }
 
@@ -65,18 +78,18 @@ describe('chunked framing', () => {
 
 describe('MeshNode', () => {
   it('relays annotations across multiple hops (A ↔ B ↔ C)', async () => {
-    const a = new MeshNode({ peerId: 'a', name: 'A', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'B', venueId: 'v' })
-    const c = new MeshNode({ peerId: 'c', name: 'C', venueId: 'v' })
+    const a = meshNode('a', 'A')
+    const b = meshNode('b', 'B')
+    const c = meshNode('c', 'C')
     await link(a, b, 'ab')
     await link(b, c, 'bc')
-    a.publishAnnotation(annotation('closure-1', 'Smoke in corridor'))
+    a.publishAnnotation(annotation(a, 'closure-1', 'Smoke in corridor'))
     expect(c.activeAnnotations().map((x) => x.text)).toEqual(['Smoke in corridor'])
     expect(b.stats.relayed).toBeGreaterThan(0)
   })
 
   it('does not loop forever in a ring and drops duplicates', async () => {
-    const nodes = ['a', 'b', 'c', 'd'].map((id) => new MeshNode({ peerId: id, name: id, venueId: 'v' }))
+    const nodes = ['a', 'b', 'c', 'd'].map((id) => meshNode(id))
     await link(nodes[0], nodes[1], '01')
     await link(nodes[1], nodes[2], '12')
     await link(nodes[2], nodes[3], '23')
@@ -89,32 +102,32 @@ describe('MeshNode', () => {
   })
 
   it('syncs state created while partitioned once a link comes up', async () => {
-    const a = new MeshNode({ peerId: 'a', name: 'A', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'B', venueId: 'v' })
-    a.publishAnnotation(annotation('h1', 'Water leak', { type: 'hazard' }))
-    b.publishAnnotation(annotation('s1', 'Need medic', { type: 'sos' }))
+    const a = meshNode('a', 'A')
+    const b = meshNode('b', 'B')
+    a.publishAnnotation(annotation(a, 'h1', 'Water leak', { type: 'hazard' }))
+    b.publishAnnotation(annotation(b, 's1', 'Need medic', { type: 'sos' }))
     await link(a, b, 'late')
     expect(a.activeAnnotations().map((x) => x.id).sort()).toEqual(['h1', 's1'])
     expect(b.activeAnnotations().map((x) => x.id).sort()).toEqual(['h1', 's1'])
   })
 
   it('propagates resolutions so closures clear everywhere', async () => {
-    const a = new MeshNode({ peerId: 'a', name: 'A', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'B', venueId: 'v' })
+    const a = meshNode('a', 'A')
+    const b = meshNode('b', 'B')
     await link(a, b, 'ab')
-    a.publishAnnotation(annotation('c1', 'Blocked'))
+    a.publishAnnotation(annotation(a, 'c1', 'Blocked'))
     b.resolveAnnotation('c1')
     expect(a.activeAnnotations()).toHaveLength(0)
   })
 
   it('eventually converges over a lossy link through periodic sync', async () => {
     const random = seededRandom(3)
-    const a = new MeshNode({ peerId: 'a', name: 'A', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'B', venueId: 'v' })
+    const a = meshNode('a', 'A')
+    const b = meshNode('b', 'B')
     const [left, right] = await link(a, b, 'lossy')
     left.withLoss(0.6, random)
     right.withLoss(0.6, random)
-    for (let i = 0; i < 10; i++) a.publishAnnotation(annotation(`n${i}`, `note ${i}`, { type: 'note' }))
+    for (let i = 0; i < 10; i++) a.publishAnnotation(annotation(a, `n${i}`, `note ${i}`, { type: 'note' }))
     for (let round = 0; round < 30 && b.activeAnnotations().length < 10; round++) {
       a.sync()
       b.sync()
@@ -123,15 +136,15 @@ describe('MeshNode', () => {
   })
 
   it('shares presence of peers', async () => {
-    const a = new MeshNode({ peerId: 'a', name: 'Alice', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'Bob', venueId: 'v' })
+    const a = meshNode('a', 'Alice')
+    const b = meshNode('b', 'Bob')
     await link(a, b, 'ab')
     a.updatePresence({ levelId: 'L2', position: [5, 5], accuracy: 2 })
     expect(b.activePeers()[0]).toMatchObject({ name: 'Alice', levelId: 'L2' })
   })
 
   it('rejects malformed frames', () => {
-    const a = new MeshNode({ peerId: 'a', name: 'A' })
+    const a = meshNode('a', 'A', undefined)
     a.receive('not json')
     a.receive(JSON.stringify({ v: 99 }))
     expect(a.stats.rejected).toBe(2)
@@ -140,8 +153,8 @@ describe('MeshNode', () => {
 
 describe('peer discovery', () => {
   it('is symmetric when a node joins after another is already up', async () => {
-    const a = new MeshNode({ peerId: 'a', name: 'Alice', venueId: 'v' })
-    const b = new MeshNode({ peerId: 'b', name: 'Bob', venueId: 'v' })
+    const a = meshNode('a', 'Alice')
+    const b = meshNode('b', 'Bob')
     const [left, right] = MemoryTransport.pair('l', 'r')
     a.addTransport(left)
     await left.start() // A's hello goes nowhere: B is not listening yet
@@ -149,5 +162,102 @@ describe('peer discovery', () => {
     await right.start()
     expect(a.activePeers().map((p) => p.name)).toEqual(['Bob'])
     expect(b.activePeers().map((p) => p.name)).toEqual(['Alice'])
+  })
+})
+
+describe('signed mesh (Ed25519)', () => {
+  /** Captures what `a` puts on the wire so a test can tamper with it. */
+  async function tap(a: MeshNode) {
+    const [wire, far] = MemoryTransport.pair('tap-l', 'tap-r')
+    const frames: string[] = []
+    far.onFrame = (f) => frames.push(f)
+    a.addTransport(wire)
+    await far.start()
+    await wire.start()
+    return frames
+  }
+
+  it('rejects a tampered body and still accepts the genuine message afterwards', async () => {
+    const a = meshNode('alice')
+    const b = meshNode('bob')
+    const frames = await tap(a)
+    a.sendText('Exit B is clear')
+    const genuine = frames.find((f) => f.includes('Exit B is clear'))!
+    const forged = genuine.replace('Exit B is clear', 'Exit B is blocked')
+    b.receive(forged)
+    expect(b.stats.forged).toBe(1)
+    expect(b.messages).toHaveLength(0)
+    b.receive(genuine)
+    expect(b.messages.map((m) => m.text)).toEqual(['Exit B is clear'])
+  })
+
+  it('rejects an envelope that claims another peer as its origin', async () => {
+    const victim = meshNode('victim')
+    const mallory = meshNode('mallory')
+    const b = meshNode('bob')
+    const frames = await tap(mallory)
+    mallory.sendText('evacuate now')
+    const envelope = decodeEnvelope(frames.find((f) => f.includes('evacuate'))!)!
+    // Re-signed by Mallory, but pretending to come from the victim.
+    const spoof = { ...envelope, origin: victim.peerId }
+    const sig = signPayload(keyFor('mallory'), signedPart(spoof))
+    b.receive(encodeEnvelope({ ...spoof, sig }))
+    expect(b.stats.forged).toBe(1)
+    expect(b.messages).toHaveLength(0)
+  })
+
+  it('rejects unsigned frames', () => {
+    const b = meshNode('bob')
+    const frame = JSON.stringify({ v: 1, id: 'x', origin: 'y', ttl: 1, hops: 0, hlc: '0000000001:0000:y', body: { kind: 'text', text: 'hi' } })
+    b.receive(frame)
+    expect(b.stats.rejected).toBe(1)
+    expect(b.messages).toHaveLength(0)
+  })
+
+  it("refuses a closure published in someone else's name, but lets anyone resolve one", async () => {
+    const alice = meshNode('alice')
+    const mallory = meshNode('mallory')
+    const bob = meshNode('bob')
+    await link(alice, bob, 'ab')
+    await link(mallory, bob, 'mb')
+    mallory.publishAnnotation(annotation(mallory, 'fake', 'Fire on L1', { author: alice.peerId, authorName: 'Alice' }))
+    expect(bob.activeAnnotations().map((x) => x.id)).not.toContain('fake')
+    expect(bob.stats.forged).toBeGreaterThan(0)
+
+    alice.publishAnnotation(annotation(alice, 'real', 'Corridor blocked'))
+    expect(bob.activeAnnotations().map((x) => x.id)).toContain('real')
+    mallory.sync()
+    mallory.resolveAnnotation('real')
+    expect(bob.activeAnnotations().map((x) => x.id)).not.toContain('real')
+    expect(bob.writerOf('real')).toBe(mallory.peerId)
+  })
+
+  it('keeps the author signature when an entry is relayed by anti-entropy', async () => {
+    const a = meshNode('a')
+    const b = meshNode('b')
+    const c = meshNode('c')
+    a.publishAnnotation(annotation(a, 'h1', 'Water leak', { type: 'hazard' }))
+    await link(a, b, 'ab') // b learns h1 from a's digest reply
+    await link(b, c, 'bc') // c learns it from b, signed by a
+    const entry = c.signedEntries().find((e) => e.key === 'h1')!
+    expect(entry.pub).toBe(a.publicHex)
+    expect(verifiedEntry(entry)).toBe(true)
+  })
+
+  it('drops tampered or unsigned entries restored from storage', () => {
+    const a = meshNode('a')
+    const entry = a.publishAnnotation(annotation(a, 'c1', 'Blocked'))
+    const tampered: SignedEntry = { ...entry, value: { ...entry.value, radius: 40 } }
+    const unsigned = { key: entry.key, value: entry.value, hlc: entry.hlc }
+    const fresh = meshNode('b')
+    expect(fresh.restore([tampered, unsigned])).toBe(false)
+    expect(fresh.restore([entry])).toBe(true)
+  })
+
+  it('derives the peer id from the public key', () => {
+    const a = meshNode('a')
+    expect(a.peerId).toMatch(/^[0-9a-f]{12}$/)
+    expect(meshNode('a').peerId).toBe(a.peerId)
+    expect(meshNode('b').peerId).not.toBe(a.peerId)
   })
 })

@@ -68,11 +68,15 @@ export function SearchBox({ places, levels, venueName, peerCount, meshUp, onPick
           <span>{peerCount}</span>
         </button>
       </div>
-      {open && (
+      {open && hits.length === 0 && (
+        <p className="search-empty" role="status">
+          No matches on this venue map
+        </p>
+      )}
+      {open && hits.length > 0 && (
         <ul className="search-results" role="listbox" aria-label="Search results">
-          {hits.length === 0 && <li className="empty">No matches on this venue map</li>}
           {hits.map(({ place }) => (
-            <li key={place.id}>
+            <li key={place.id} role="none">
               <button
                 type="button"
                 role="option"

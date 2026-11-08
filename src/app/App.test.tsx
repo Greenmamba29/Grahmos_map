@@ -6,7 +6,7 @@ describe('App', () => {
   it('renders the offline venue map with floors and search', () => {
     render(<App />)
     expect(screen.getByRole('application', { name: /Ground Level floor plan/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Level 3' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '3 Level 3' })).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText(/Search GrahmOS/), { target: { value: 'clinic' } })
     const results = screen.getByRole('listbox', { name: 'Search results' })
     expect(within(results).getByText('Clinic')).toBeInTheDocument()

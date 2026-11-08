@@ -11,15 +11,16 @@ export interface LwwEntry<T> {
 
 export type Digest = Record<string, string>
 
-export class LwwMap<T> {
-  private readonly entries = new Map<string, LwwEntry<T>>()
+/** `E` lets callers store richer entries (e.g. signed ones) and get them back typed. */
+export class LwwMap<T, E extends LwwEntry<T> = LwwEntry<T>> {
+  private readonly entries = new Map<string, E>()
 
-  constructor(initial: LwwEntry<T>[] = []) {
+  constructor(initial: E[] = []) {
     for (const entry of initial) this.merge(entry)
   }
 
   /** Applies an entry; returns true when local state changed. */
-  merge(entry: LwwEntry<T>): boolean {
+  merge(entry: E): boolean {
     const current = this.entries.get(entry.key)
     if (current && current.hlc >= entry.hlc) return false
     this.entries.set(entry.key, entry)
@@ -34,7 +35,7 @@ export class LwwMap<T> {
     return [...this.entries.values()].map((e) => e.value)
   }
 
-  all(): LwwEntry<T>[] {
+  all(): E[] {
     return [...this.entries.values()]
   }
 
@@ -45,7 +46,7 @@ export class LwwMap<T> {
   }
 
   /** Entries the remote is missing or holds an older version of. */
-  newerThan(remote: Digest): LwwEntry<T>[] {
+  newerThan(remote: Digest): E[] {
     return this.all().filter((e) => !remote[e.key] || remote[e.key] < e.hlc)
   }
 
@@ -57,7 +58,7 @@ export class LwwMap<T> {
     })
   }
 
-  delete(predicate: (entry: LwwEntry<T>) => boolean) {
+  delete(predicate: (entry: E) => boolean) {
     for (const [key, entry] of this.entries) if (predicate(entry)) this.entries.delete(key)
   }
 }

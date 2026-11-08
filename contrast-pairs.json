@@ -1,0 +1,82 @@
+{
+  "themes": [
+    "light"
+  ],
+  "pairs": [
+    [
+      "body text / card",
+      "ink",
+      "card"
+    ],
+    [
+      "muted text / card",
+      "muted",
+      "card"
+    ],
+    [
+      "muted text / list rows",
+      "muted",
+      "surface-alt"
+    ],
+    [
+      "chips and labels / card",
+      "chip-text",
+      "card"
+    ],
+    [
+      "primary button text",
+      "on-primary",
+      "blue"
+    ],
+    [
+      "primary button hover",
+      "on-primary",
+      "blue-dark"
+    ],
+    [
+      "links and secondary buttons / card",
+      "blue",
+      "card"
+    ],
+    [
+      "ETA / card",
+      "green",
+      "card"
+    ],
+    [
+      "signed-by / trusted badge",
+      "ok-text",
+      "ok-bg"
+    ],
+    [
+      "active nav",
+      "nav-active",
+      "nav-active-bg"
+    ],
+    [
+      "problem text",
+      "problem-text",
+      "problem-bg"
+    ],
+    [
+      "warning banner",
+      "warn-text",
+      "warn-bg"
+    ],
+    [
+      "toast",
+      "on-primary",
+      "toast-bg"
+    ],
+    [
+      "hazard label / card",
+      "hazard",
+      "card"
+    ],
+    [
+      "active segmented tab",
+      "nav-active",
+      "nav-active-bg-alt"
+    ]
+  ]
+}

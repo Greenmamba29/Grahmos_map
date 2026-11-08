@@ -1,0 +1,126 @@
+# OSA rule pack for Semgrep (engine: LGPL-2.1, run as a separate CLI).
+# Written for the OSA stack (TanStack Start + React + src/core). We ship our own rules because the
+# official semgrep-rules repo uses the non-OSI "Semgrep Rules License", which restricts commercial use.
+# License of this file: same as the OSA kit.
+rules:
+  - id: osa-unsanitized-html
+    languages: [typescript]
+    severity: ERROR
+    message: dangerouslySetInnerHTML with a value that isn't passed through a sanitizer (DOMPurify). Untrusted HTML becomes XSS once live data flows in.
+    # Stock shadcn (src/components/ui) is excluded: its chart.tsx injects theme CSS built from developer
+    # config, and OSA never edits stock shadcn. Anything we write elsewhere is checked.
+    paths:
+      exclude: ["**/src/components/ui/**"]
+    patterns:
+      - pattern: '<$EL dangerouslySetInnerHTML={{__html: $X}} />'
+      - pattern-not: '<$EL dangerouslySetInnerHTML={{__html: $F.sanitize(...)}} />'
+      - pattern-not: '<$EL dangerouslySetInnerHTML={{__html: sanitize(...)}} />'
+      - metavariable-pattern:
+          metavariable: $X
+          patterns:
+            - pattern-not-regex: (?i)(sanitiz|purif|safeHtml|renderEmailPreview)
+  - id: osa-dynamic-code
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: eval / new Function / string timers execute arbitrary code.
+    pattern-either:
+      - pattern: 'eval(...)'
+      - pattern: 'new Function(...)'
+      - pattern: 'setTimeout("...", ...)'
+      - pattern: 'setInterval("...", ...)'
+  - id: osa-raw-innerhtml
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: Direct innerHTML/outerHTML assignment bypasses React escaping.
+    # Clearing a node (innerHTML = '') writes no markup. Sim v0.9.12's PPTX viewer did it five times and
+    # each was reported as an injection sink (2026-10-03); only a value that can carry markup counts.
+    patterns:
+      - pattern-either:
+          - pattern: '$E.innerHTML = $V'
+          - pattern: '$E.outerHTML = $V'
+          - pattern: 'document.write(...)'
+      - pattern-not: "$E.innerHTML = ''"
+      - pattern-not: '$E.innerHTML = ""'
+      - pattern-not: '$E.innerHTML = ``'
+  - id: osa-secret-in-browser-storage
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: Tokens or secrets in localStorage/sessionStorage are readable by any script on the page. Keep them server-side (proxy) or in httpOnly cookies.
+    patterns:
+      - pattern-either:
+          - pattern: 'localStorage.setItem($K, ...)'
+          - pattern: 'sessionStorage.setItem($K, ...)'
+          - pattern: 'window.localStorage.setItem($K, ...)'
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(token|secret|password|api.?key|credential|jwt).*
+  - id: osa-insecure-http-fetch
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: Plain-http request from app code (mixed content / credentials in clear). Use https or the proxy.
+    patterns:
+      - pattern-either:
+          - pattern: 'fetch("=~/^http:\/\/(?!localhost|127\.0\.0\.1)/", ...)'
+          - pattern: 'fetch("=~/^http:\/\/(?!localhost|127\.0\.0\.1)/")'
+  - id: osa-postmessage-wildcard
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: postMessage with target origin "*" leaks data to any embedding page.
+    pattern: '$W.postMessage($M, "*")'
+  - id: osa-proxy-open-forward
+    languages: [typescript]
+    severity: ERROR
+    message: Server-side fetch to a URL built from request input without an allowlist (SSRF). Generated OSA proxies check the contract first.
+    patterns:
+      - pattern-inside: |
+          async function $H($REQ: Request, ...) { ... }
+      - pattern: 'fetch(new URL($P, ...), ...)'
+      - pattern-not-inside: |
+          if (!$OK) return $R;
+          ...
+  - id: osa-auth-header-literal
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: Literal credential in an Authorization header.
+    pattern-either:
+      - pattern: '{ Authorization: "=~/^(Bearer|Basic) [A-Za-z0-9._~+\/=-]{12,}$/" }'
+      - pattern: '{ authorization: "=~/^(Bearer|Basic) [A-Za-z0-9._~+\/=-]{12,}$/" }'
+  - id: osa-core-purity
+    languages: [typescript]
+    severity: ERROR
+    message: src/core must stay platform-free (shared with Expo). Move browser APIs behind an interface in src/platform/web.
+    paths:
+      include: ["**/src/core/**"]
+      exclude: ["**/src/core/api/**/proxy.ts"]
+    pattern-either:
+      - pattern: 'window.$X'
+      - pattern: 'document.$X'
+      - pattern: 'localStorage.$X'
+      - pattern: 'navigator.$X'
+  - id: osa-hil-bypass
+    languages: [typescript]
+    severity: ERROR
+    message: A request is marked approved outside src/core, which bypasses the HIL gate and the Guardian.
+    paths:
+      exclude: ["**/src/core/**", "**/tests/**"]
+    pattern-either:
+      - pattern: '{..., status: "auto_approved", ...}'
+      - pattern: '{..., status: "approved", ...}'
+  - id: osa-bound-fetch
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      fetch called as a method ($X.fetch(...)). Cloudflare Workers, which hosts Lovable apps, throws
+      "Illegal invocation" unless fetch is called unbound, so every request fails once deployed while
+      Node and the dev server work fine (The Hashmark, 2026-10-05: all feeds fell back to sample).
+      Store fetch in a plain variable or a field with another name and call that, or wrap it:
+      (url, init) => f.call(undefined, url, init).
+    # Global receivers are what fetch expects; handler.fetch(request, env, ctx) is a Worker entry, not
+    # the fetch API (stock src/server.ts).
+    patterns:
+      - pattern: '$X.fetch(...)'
+      - pattern-not: 'window.fetch(...)'
+      - pattern-not: 'globalThis.fetch(...)'
+      - pattern-not: 'self.fetch(...)'
+      - pattern-not: '$H.fetch($REQ, $ENV, $CTX)'
+

@@ -9,7 +9,6 @@ export interface BeaconScanner {
 }
 
 const APPLE_COMPANY_ID = 0x004c
-const EDDYSTONE_SERVICE = 0xfeaa
 
 function hex(view: DataView, offset: number, length: number) {
   let out = ''
@@ -51,6 +50,38 @@ export function beaconIndex(beacons: Beacon[]) {
   return index
 }
 
+/** A BLE advertisement in a platform-neutral shape (Web Bluetooth, Capacitor, native shells). */
+export interface Advertisement {
+  rssi?: number | null
+  /** Company identifier → payload. */
+  manufacturerData?: ReadonlyMap<number, DataView> | null
+  /** Service UUID (16-bit or full 128-bit form) → payload. */
+  serviceData?: ReadonlyMap<string, DataView> | null
+}
+
+function isEddystoneUuid(uuid: string) {
+  const u = uuid.toLowerCase()
+  return u === 'feaa' || u === '0xfeaa' || u.startsWith('0000feaa')
+}
+
+/** Resolves an advertisement to a venue beacon sighting (iBeacon first, then Eddystone-UID). */
+export function resolveAdvertisement(index: Map<string, Beacon>, ad: Advertisement, at = Date.now()): BeaconSighting | null {
+  if (typeof ad.rssi !== 'number' || ad.rssi === 127) return null
+  const apple = ad.manufacturerData?.get(APPLE_COMPANY_ID)
+  if (apple) {
+    const ib = parseIBeacon(apple)
+    const beacon = ib && index.get(`ib:${ib.uuid}:${ib.major}:${ib.minor}`)
+    if (beacon && ib) return { beaconId: beacon.id, rssi: ad.rssi, txPower: ib.txPower, at }
+  }
+  for (const [uuid, data] of ad.serviceData ?? new Map<string, DataView>()) {
+    if (!isEddystoneUuid(String(uuid))) continue
+    const ed = parseEddystoneUid(data)
+    const beacon = ed && index.get(`ed:${ed.namespace}:${ed.instance}`)
+    if (beacon && ed) return { beaconId: beacon.id, rssi: ad.rssi, txPower: ed.txPower, at }
+  }
+  return null
+}
+
 type LEScanBluetooth = Bluetooth & {
   requestLEScan?: (options: BluetoothLEScanOptions) => Promise<BluetoothLEScan>
 }
@@ -81,20 +112,12 @@ export class WebBluetoothBeaconScanner implements BeaconScanner {
     this.scan = await bt.requestLEScan({ acceptAllAdvertisements: true, keepRepeatedDevices: true })
     this.listener = (raw: Event) => {
       const event = raw as BluetoothAdvertisingEvent
-      if (typeof event.rssi !== 'number') return
-      const apple = event.manufacturerData?.get(APPLE_COMPANY_ID)
-      if (apple) {
-        const ib = parseIBeacon(apple)
-        const beacon = ib && index.get(`ib:${ib.uuid}:${ib.major}:${ib.minor}`)
-        if (beacon && ib) onSighting({ beaconId: beacon.id, rssi: event.rssi, txPower: ib.txPower, at: Date.now() })
-        return
-      }
-      for (const [uuid, data] of event.serviceData ?? new Map()) {
-        if (!String(uuid).startsWith(`0000${EDDYSTONE_SERVICE.toString(16)}`)) continue
-        const ed = parseEddystoneUid(data)
-        const beacon = ed && index.get(`ed:${ed.namespace}:${ed.instance}`)
-        if (beacon && ed) onSighting({ beaconId: beacon.id, rssi: event.rssi, txPower: ed.txPower, at: Date.now() })
-      }
+      const sighting = resolveAdvertisement(index, {
+        rssi: event.rssi,
+        manufacturerData: event.manufacturerData,
+        serviceData: event.serviceData && new Map([...event.serviceData].map(([uuid, data]) => [String(uuid), data])),
+      })
+      if (sighting) onSighting(sighting)
     }
     bt.addEventListener('advertisementreceived', this.listener)
   }

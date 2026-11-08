@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { MeshNode } from '../mesh/node'
-import { randomId } from '../mesh/protocol'
+import { fromHex, generateKey, keyFromSecret, toHex, type DeviceKey } from '../mesh/identity'
+import { isNativeShell } from '../platform/native'
 import { BroadcastChannelTransport } from '../mesh/transports/broadcastChannel'
+import { BleClient } from '@capacitor-community/bluetooth-le'
 import { BluetoothRelayTransport } from '../mesh/transports/bluetoothGatt'
+import { NativeBluetoothRelayTransport } from '../mesh/transports/nativeRelay'
 import { storage } from '../lib/storage'
 
 export interface Identity {
-  peerId: string
+  key: DeviceKey
   name: string
 }
 
 const NAME_KEY = 'grahmos.callsign'
-const PEER_KEY = 'grahmos.peerId'
+const SECRET_KEY = 'grahmos.secretKey'
+const TRUST_KEY = 'grahmos.trusted'
 
 function read(store: Storage | undefined, key: string) {
   try {
@@ -29,30 +33,50 @@ function write(store: Storage | undefined, key: string, value: string) {
   }
 }
 
+const session = () => (typeof sessionStorage === 'undefined' ? undefined : sessionStorage)
+const local = () => (typeof localStorage === 'undefined' ? undefined : localStorage)
+
 /**
- * Peer ids are per tab (sessionStorage) so two tabs on one device are two
- * distinct mesh nodes; the human-readable callsign is shared per device.
+ * Ed25519 identity. In a browser each tab is its own mesh node, so its key lives in sessionStorage; the
+ * native app has one WebView, so its key persists in localStorage across launches. The callsign is
+ * per device either way. The secret never leaves the device: only the public key and signatures travel.
  */
 export function loadIdentity(): Identity {
-  const session = typeof sessionStorage === 'undefined' ? undefined : sessionStorage
-  const local = typeof localStorage === 'undefined' ? undefined : localStorage
-  let peerId = read(session, PEER_KEY)
-  if (!peerId) {
-    peerId = randomId(6)
-    write(session, PEER_KEY, peerId)
+  const store = isNativeShell() ? local() : session()
+  let key: DeviceKey | null = null
+  const saved = read(store, SECRET_KEY)
+  if (saved) {
+    try {
+      key = keyFromSecret(fromHex(saved))
+    } catch {
+      key = null
+    }
   }
-  const name = read(local, NAME_KEY) ?? `Responder ${peerId.slice(0, 4).toUpperCase()}`
-  return { peerId, name }
+  if (!key) {
+    key = generateKey()
+    write(store, SECRET_KEY, toHex(key.secretKey))
+  }
+  const name = read(local(), NAME_KEY) ?? `Responder ${key.peerId.slice(0, 4).toUpperCase()}`
+  return { key, name }
 }
 
-export function saveIdentity(identity: Identity) {
-  write(typeof localStorage === 'undefined' ? undefined : localStorage, NAME_KEY, identity.name)
+export function saveIdentity(name: string) {
+  write(local(), NAME_KEY, name)
+}
+
+function loadTrusted(): string[] {
+  try {
+    const parsed = JSON.parse(read(local(), TRUST_KEY) ?? '[]')
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
 }
 
 export function useMesh(venueId: string, onVenue: (venue: unknown, from: string) => void) {
   const [node] = useState(() => {
     const identity = loadIdentity()
-    return new MeshNode({ peerId: identity.peerId, name: identity.name, venueId })
+    return new MeshNode({ key: identity.key, name: identity.name, venueId, trusted: loadTrusted() })
   })
   const revision = useSyncExternalStore(
     useCallback((listener) => node.subscribe(listener), [node]),
@@ -89,13 +113,18 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
 
   // Persist CRDT state whenever it changes.
   useEffect(() => {
-    const timeout = setTimeout(() => void storage.saveAnnotations(node.annotations.all()), 400)
+    const timeout = setTimeout(() => {
+      void storage.saveAnnotations(node.signedEntries())
+      write(local(), TRUST_KEY, JSON.stringify([...node.trusted]))
+    }, 400)
     return () => clearTimeout(timeout)
   }, [node, revision])
 
   const connectBluetooth = useCallback(async () => {
     setError(null)
-    const transport = new BluetoothRelayTransport({ namePrefix: 'GrahmOS' })
+    const transport = isNativeShell()
+      ? new NativeBluetoothRelayTransport(BleClient)
+      : new BluetoothRelayTransport({ namePrefix: 'GrahmOS' })
     node.addTransport(transport)
     try {
       await transport.start()
@@ -110,7 +139,7 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
       const trimmed = name.trim().slice(0, 40)
       if (!trimmed) return
       node.setName(trimmed)
-      saveIdentity({ peerId: node.peerId, name: trimmed })
+      saveIdentity(trimmed)
     },
     [node],
   )
@@ -121,6 +150,6 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
     error,
     connectBluetooth,
     rename,
-    bluetoothSupported: BluetoothRelayTransport.isSupported(),
+    bluetoothSupported: isNativeShell() || BluetoothRelayTransport.isSupported(),
   }
 }

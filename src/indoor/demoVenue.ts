@@ -23,6 +23,9 @@ const CORRIDOR_TOP = 22
 const CORRIDOR_BOTTOM = 28
 const CORRIDOR_Y = 25
 const BEACON_UUID = 'f7826da6-4fa2-4e98-8024-bc5b71e0893e'
+/** Eddystone namespace: the first 10 bytes of the iBeacon UUID (the usual mapping for dual-mode beacons). */
+const EDDYSTONE_NAMESPACE = BEACON_UUID.replace(/-/g, '').slice(0, 20)
+const hex2 = (n: number) => n.toString(16).padStart(2, '0')
 
 interface SlotSpec {
   width: number
@@ -300,6 +303,11 @@ export function createDemoVenue(): Venue {
         position,
         txPower: -59,
         ibeacon: { uuid: BEACON_UUID, major: spec.ordinal + 1, minor: index + 1 },
+        // Same beacon, Eddystone-UID identity: iOS hides iBeacon frames from CoreBluetooth apps.
+        eddystone: {
+          namespace: EDDYSTONE_NAMESPACE,
+          instance: `00000000${hex2(spec.ordinal + 1)}${hex2(index + 1)}`,
+        },
       })
     })
   }

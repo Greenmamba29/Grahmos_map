@@ -56,6 +56,7 @@ export function DirectionsSheet(props: DirectionsSheetProps) {
   const { places, levels, origin, destinationId, stepFree, route, problem, walking, walkProgress } = props
   const sorted = [...places].sort((a, b) => a.name.localeCompare(b.name))
   const levelName = (id: string) => levels.find((l) => l.id === id)?.name ?? id
+  const optionLabel = (p: Place) => (p.name.includes(levelName(p.levelId)) ? p.name : `${p.name} · ${levelName(p.levelId)}`)
   const floors = route ? new Set(route.nodes.map((n) => n.levelId)).size - 1 : 0
 
   return (
@@ -78,26 +79,27 @@ export function DirectionsSheet(props: DirectionsSheetProps) {
           <label>
             <span className="sr-only">Starting point</span>
             <select
+              aria-label="Starting point"
               value={origin.type === 'me' ? 'me' : origin.placeId}
               onChange={(e) => props.onOrigin(e.target.value === 'me' ? { type: 'me' } : { type: 'place', placeId: e.target.value })}
             >
               <option value="me">Your location</option>
               {sorted.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} · {levelName(p.levelId)}
+                  {optionLabel(p)}
                 </option>
               ))}
             </select>
           </label>
           <label>
             <span className="sr-only">Destination</span>
-            <select value={destinationId ?? ''} onChange={(e) => props.onDestination(e.target.value)}>
+            <select aria-label="Destination" value={destinationId ?? ''} onChange={(e) => props.onDestination(e.target.value)}>
               <option value="" disabled>
                 Choose destination
               </option>
               {sorted.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} · {levelName(p.levelId)}
+                  {optionLabel(p)}
                 </option>
               ))}
             </select>

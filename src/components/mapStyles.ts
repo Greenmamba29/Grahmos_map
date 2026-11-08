@@ -45,7 +45,8 @@ export const amenityStyle: Record<AmenityCategory, { icon: LucideIcon; color: st
 
 export const annotationStyle: Record<AnnotationType, { icon: LucideIcon; color: string; label: string }> = {
   closure: { icon: Ban, color: '#d93025', label: 'Closure' },
-  hazard: { icon: AlertTriangle, color: '#e37400', label: 'Hazard' },
+  // #b06000: 4.9:1 on white for the label text (#e37400 was 3.0:1).
+  hazard: { icon: AlertTriangle, color: '#b06000', label: 'Hazard' },
   sos: { icon: Siren, color: '#c5221f', label: 'SOS' },
   note: { icon: StickyNote, color: '#5f6368', label: 'Note' },
   'all-clear': { icon: Info, color: '#188038', label: 'All clear' },

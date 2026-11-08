@@ -21,6 +21,18 @@ No environment variables, API keys or backend are required. The build is a
 static site. Any HTTPS static host works (HTTPS is required for service workers
 and Web Bluetooth).
 
+### Native apps (Android and iOS)
+
+```bash
+npm run cap:android   # build, sync, open Android Studio (run on a phone with Bluetooth)
+npm run cap:ios       # build, sync, open Xcode (Mac only; set your signing team)
+```
+
+Bluetooth permissions are already declared (`android/app/src/main/AndroidManifest.xml`,
+`ios/App/App/Info.plist`). Bluetooth doesn't work in the iOS simulator or the Android emulator; use a
+real device. CI (`.github/workflows/native.yml`) builds a debug APK on every push and the iOS app on
+manual dispatch.
+
 ### Offline check
 
 1. Load the app once while online, and wait for "App installed for offline use"
@@ -99,20 +111,39 @@ Every frame is a UTF-8 JSON envelope:
 
 ```json
 { "v": 1, "id": "9f2c…", "origin": "a1b2c3d4e5f6", "ttl": 6, "hops": 0,
-  "hlc": "0lz8k2m1c0:0000:a1b2c3d4e5f6", "body": { "kind": "ops", "entries": [ … ] } }
+  "hlc": "0lz8k2m1c0:0000:a1b2c3d4e5f6", "body": { "kind": "ops", "entries": [ … ] },
+  "pub": "<64 hex: Ed25519 public key>", "sig": "<128 hex: Ed25519 signature>" }
 ```
+
+### Signatures and identity
+
+- Each device (each browser tab, or the native app) has an Ed25519 key. Its peer id, `origin`, is the
+  first 12 hex characters of SHA-256(public key), so an origin can't be claimed without the key.
+- `sig` covers the canonical JSON (keys sorted at every depth) of `{v, id, origin, hlc, body, pub}`.
+  `ttl` and `hops` are left out because relays change them.
+- Receivers check `origin == peerId(pub)` and the signature before anything else. A forged frame is
+  dropped **without** marking its id as seen, so it can't shadow the genuine message.
+- CRDT entries (`ops`) are signed separately by whoever wrote that version:
+  `{key, value, hlc, pub, sig}` over `{key, value, hlc}`. The HLC's node must equal the signer's peer
+  id. The signer must be the annotation's `author`, unless the entry only sets `resolved: true`: any
+  responder may clear a hazard, but nobody can create or edit one in someone else's name. Because
+  entries carry their author's signature, anti-entropy can relay them through any peer.
+- Venue packages over the mesh: a new venue id is installed; an update is accepted only from the peer
+  who first shared it; the built-in venue and file imports can't be replaced from the mesh.
+- Not covered yet: revoking a stolen key, and replay of old presence after the 10-minute dedupe window
+  (CRDT merges are idempotent, so replayed reports change nothing).
 
 | `body.kind` | Purpose | Default TTL |
 | --- | --- | --- |
 | `hello` | Name and venue. Also a 15 s heartbeat. Newcomers get a hello back. | 0 |
 | `digest` | `{key: hlc}` summary for anti-entropy. A receiver replies with missing `ops` and, if it is itself behind, a `reply` digest. | 0 |
-| `ops` | Last-writer-wins CRDT entries `{key, value: Annotation, hlc}` | 6 |
+| `ops` | Signed last-writer-wins CRDT entries `{key, value: Annotation, hlc, pub, sig}` | 6 |
 | `presence` | Live position, level and accuracy (expires after 90 s) | 3 |
 | `text` | Broadcast message (≤ 500 chars) | 6 |
 | `venue` | Whole venue package | 2 |
 
-Relay rules: drop frames whose `id` has been seen or whose `origin` is self.
-Reject HLCs more than 24 h ahead. Otherwise handle the frame and, if `ttl > 0`,
+Relay rules: drop frames whose `id` has been seen or whose `origin` is self, and frames whose
+signature doesn't verify. Reject HLCs more than 24 h ahead. Otherwise handle the frame and, if `ttl > 0`,
 forward it with `ttl − 1, hops + 1` on every link except the one it came in on.
 
 ### Chunked framing for constrained links
@@ -123,7 +154,8 @@ For BLE GATT (and LoRa or serial bridges), each frame is split into packets:
 u16 seq (big-endian) | u16 index | u16 total | payload bytes…
 ```
 
-The default packet size is 180 bytes (use 20 for links without MTU exchange).
+The browser uses 180-byte packets; the native apps use the negotiated MTU − 3 (minimum 20).
+Signatures add about 200 bytes per frame.
 Receivers reassemble packets in any order and drop partials after 15 s.
 
 ### BLE relay node (Nordic UART Service)
@@ -146,8 +178,9 @@ reconnects on its own with exponential backoff when a relay goes out of range.
 
 The mesh is designed to plug into these open projects:
 
-- **Meshtastic.** LoRa mesh firmware for ESP32/nRF52, used as a long-range
-  backbone between relays.
+- **MeshCore** (MIT). LoRa mesh firmware for ESP32/nRF52, used as a long-range
+  backbone between relays. (Meshtastic is GPL-3.0, so it is only supported as a
+  separate radio people already own, never as code in this app.)
 - **Nordic UART Service / Zephyr / ESP-IDF NimBLE.** Relay firmware base.
 - **Bitchat-style BLE store-and-forward.** Phone-to-phone over BLE in a native
   shell, using the same envelope and chunk format.
@@ -161,15 +194,18 @@ The IndexedDB database `grahmos-indoor` has these stores:
 - `annotations`: CRDT entries, persisted 400 ms after each change.
 - `settings`: the active venue.
 
-The callsign lives in `localStorage`. The peer id lives in `sessionStorage`, so
-each tab is its own mesh node.
+The callsign and the trust list live in `localStorage`. The Ed25519 secret key lives in
+`sessionStorage` in a browser (each tab is its own mesh node) and in `localStorage` in the native app
+(one identity per install). Only the public key and signatures ever leave the device.
 
 ## 7. Roadmap
 
-- A native shell (Capacitor) for background beacon scanning and peer-to-peer
-  BLE/Wi-Fi Aware on iOS and Android.
-- Signed envelopes (Ed25519 per device) with a trust list for authoritative
-  closures.
+- A custom Capacitor plugin for BLE advertising (phone-to-phone mesh with no relay),
+  porting bitchat's public-domain iOS dual-role logic; MultipeerConnectivity / Nearby
+  Connections as a higher-bandwidth link.
+- Background scanning: CoreLocation beacon regions on iOS, AltBeacon on Android.
+- Key revocation and venue-authority keys published inside venue packages.
+- A dark theme (the gate's standard dark-mode check is skipped until then).
 - Pedestrian dead reckoning (accelerometer and compass) fused with BLE in the
   Kalman filter.
 - IMDF zip importer and a floor-plan editor.

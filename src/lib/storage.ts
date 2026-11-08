@@ -1,11 +1,10 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { Venue } from '../indoor/types'
-import type { LwwEntry } from '../mesh/crdt'
-import type { Annotation } from '../mesh/protocol'
+import type { SignedEntry } from '../mesh/protocol'
 
 interface GrahmosDb extends DBSchema {
   venues: { key: string; value: Venue }
-  annotations: { key: string; value: LwwEntry<Annotation> }
+  annotations: { key: string; value: SignedEntry }
   settings: { key: string; value: unknown }
 }
 
@@ -38,8 +37,8 @@ export const storage = {
   listVenues: () => safe<Venue[]>([], (d) => d.getAll('venues')),
   saveVenue: (venue: Venue) => safe(undefined, async (d) => void (await d.put('venues', venue))),
   deleteVenue: (id: string) => safe(undefined, (d) => d.delete('venues', id)),
-  loadAnnotations: () => safe<LwwEntry<Annotation>[]>([], (d) => d.getAll('annotations')),
-  saveAnnotations: (entries: LwwEntry<Annotation>[]) =>
+  loadAnnotations: () => safe<SignedEntry[]>([], (d) => d.getAll('annotations')),
+  saveAnnotations: (entries: SignedEntry[]) =>
     safe(undefined, async (d) => {
       const tx = d.transaction('annotations', 'readwrite')
       await Promise.all([...entries.map((e) => tx.store.put(e)), tx.done])

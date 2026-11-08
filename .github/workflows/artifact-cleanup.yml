@@ -1,0 +1,62 @@
+# Artifact cleanup: GitHub's artifact quota is shared across the whole account, so old gate reports in one
+# repo can turn every repo's uploads red. Keeps the newest artifact of each name, deletes older ones past
+# KEEP_DAYS. Runs when this file changes (first install cleans up immediately), weekly, and on demand.
+# Copy to .github/workflows/. Uses only the repo's own GITHUB_TOKEN with actions: write.
+name: artifact-cleanup
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/artifact-cleanup.yml"]
+  schedule:
+    - cron: "23 5 * * 0" # weekly (Sun 05:23 UTC)
+  workflow_dispatch:
+    inputs:
+      keep_days:
+        description: "Delete artifacts older than this many days (the newest of each name is always kept)"
+        default: "7"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      KEEP_DAYS: ${{ inputs.keep_days || '7' }}
+    steps:
+      - name: Delete old artifacts
+        run: |
+          gh api "repos/$REPO/actions/artifacts?per_page=100" --paginate \
+            --jq '.artifacts[] | select(.expired == false) | [.id, .name, .created_at, .size_in_bytes] | @tsv' > all.tsv
+          python3 - <<'PY'
+          import csv, datetime, os, subprocess
+          keep_days = int(os.environ["KEEP_DAYS"])
+          cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=keep_days)
+          rows = [r for r in csv.reader(open("all.tsv"), delimiter="\t") if len(r) == 4]
+          rows.sort(key=lambda r: r[2], reverse=True)
+          newest, deleted, freed, failed = set(), 0, 0, 0
+          for aid, name, created, size in rows:
+              if name not in newest:
+                  newest.add(name)
+                  continue
+              if datetime.datetime.fromisoformat(created.replace("Z", "+00:00")) > cutoff:
+                  continue
+              r = subprocess.run(["gh", "api", "-X", "DELETE", f"repos/{os.environ['REPO']}/actions/artifacts/{aid}"], capture_output=True, text=True)
+              if r.returncode == 0:
+                  deleted += 1
+                  freed += int(size)
+              else:
+                  failed += 1
+          msg = f"deleted {deleted} artifact(s), freed {freed / 1e6:.1f} MB, kept {len(rows) - deleted - failed}, failed {failed}"
+          print(msg)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(f"## Artifact cleanup\n{msg}\n")
+          print(f"::{'error' if failed else 'notice'} title=artifact cleanup::{msg}")
+          if failed:
+              raise SystemExit(1)
+          PY

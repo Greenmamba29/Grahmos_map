@@ -1,0 +1,15 @@
+{
+  "name": "osa-kit",
+  "private": true,
+  "description": "Sourced open-source engines the OSA gate and adapter drive. Install once: cd osa-kit && npm install",
+  "type": "module",
+  "devDependencies": {
+    "@ast-grep/cli": "^0.45.3",
+    "axe-core": "^4.13.0",
+    "openapi-fetch": "^0.17.0",
+    "openapi-typescript": "^7.13.0",
+    "semver": "^7.8.5",
+    "typescript": "^5.9.3",
+    "yaml": "^2.9.1"
+  }
+}

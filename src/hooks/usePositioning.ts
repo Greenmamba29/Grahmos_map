@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { IndoorPosition, Point, Venue } from '../indoor/types'
 import { PositioningEngine } from '../positioning/engine'
+import { BleClient } from '@capacitor-community/bluetooth-le'
+import { isNativeShell } from '../platform/native'
+import { NativeBeaconScanner } from '../positioning/nativeScanner'
 import {
   SimulatedBeaconScanner,
   WebBluetoothBeaconScanner,
@@ -57,7 +60,11 @@ export function usePositioning(venue: Venue) {
   )
 
   const startBluetooth = useCallback(
-    () => run(new WebBluetoothBeaconScanner(venue.beacons), 'ble'),
+    () =>
+      run(
+        isNativeShell() ? new NativeBeaconScanner(venue.beacons, BleClient) : new WebBluetoothBeaconScanner(venue.beacons),
+        'ble',
+      ),
     [run, venue.beacons],
   )
 
@@ -101,7 +108,7 @@ export function usePositioning(venue: Venue) {
     startSimulatedWalk,
     setManual,
     turnOff,
-    bluetoothScanSupported: WebBluetoothBeaconScanner.isSupported(),
+    bluetoothScanSupported: isNativeShell() || WebBluetoothBeaconScanner.isSupported(),
   }
 }
 

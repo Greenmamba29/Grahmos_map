@@ -36,22 +36,44 @@ export interface PeerPresence {
 export type MeshBody =
   | { kind: 'hello'; name: string; venueId?: string }
   | { kind: 'presence'; presence: PeerPresence }
-  | { kind: 'ops'; entries: LwwEntry<Annotation>[] }
+  | { kind: 'ops'; entries: SignedEntry[] }
   | { kind: 'digest'; venueId: string; digest: Digest; reply?: boolean }
   | { kind: 'venue-offer'; venueId: string; version: number; name: string; bytes: number }
   | { kind: 'venue-request'; venueId: string }
   | { kind: 'venue'; venue: unknown }
   | { kind: 'text'; text: string }
 
+/**
+ * A CRDT entry signed by whoever wrote this version. The HLC's node must be the signer's peer id, and a
+ * signer other than the annotation's author may only publish a resolution (resolved: true).
+ */
+export interface SignedEntry extends LwwEntry<Annotation> {
+  /** Ed25519 public key of the writer, hex. */
+  pub: string
+  /** Signature over canonical({ key, value, hlc }), hex. */
+  sig: string
+}
+
 export interface MeshEnvelope {
   v: number
   id: string
+  /** Peer id = first 12 hex of SHA-256(pub); checked on receipt. */
   origin: string
-  /** Remaining relay hops. */
+  /** Remaining relay hops (not signed: relays decrement it). */
   ttl: number
+  /** Hops travelled (not signed: relays increment it). */
   hops: number
   hlc: string
   body: MeshBody
+  /** Sender's Ed25519 public key, hex. */
+  pub: string
+  /** Signature over canonical({ v, id, origin, hlc, body, pub }), hex. */
+  sig: string
+}
+
+/** The envelope fields covered by the sender's signature. */
+export function signedPart(e: Omit<MeshEnvelope, 'sig'> | MeshEnvelope) {
+  return { v: e.v, id: e.id, origin: e.origin, hlc: e.hlc, body: e.body, pub: e.pub }
 }
 
 export function randomId(bytes = 8) {
@@ -73,6 +95,8 @@ export function decodeEnvelope(frame: string): MeshEnvelope | null {
       typeof value.origin !== 'string' ||
       typeof value.ttl !== 'number' ||
       typeof value.hlc !== 'string' ||
+      typeof value.pub !== 'string' ||
+      typeof value.sig !== 'string' ||
       typeof value.body?.kind !== 'string'
     ) {
       return null

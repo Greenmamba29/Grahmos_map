@@ -30,6 +30,7 @@ import { storage } from '../lib/storage'
 import { useMesh } from '../hooks/useMesh'
 import { usePositioning } from '../hooks/usePositioning'
 import { randomId, type AnnotationType } from '../mesh/protocol'
+import { decideVenueUpdate } from '../mesh/venuePolicy'
 import { IndoorRouter } from '../routing/router'
 import { routeToNearest } from '../routing/nearest'
 
@@ -42,6 +43,7 @@ interface ReportDraft {
 }
 
 const demoVenue = createDemoVenue()
+const BUILT_IN_VENUES = new Set([demoVenue.id])
 
 const quickCategories: { label: string; icon: LucideIcon; match: (p: Place) => boolean }[] = [
   { label: 'Exits', icon: DoorOpen, match: (p) => p.category === 'exit' },
@@ -102,7 +104,17 @@ export function App() {
     }
   }, [])
 
-  const installVenue = useCallback(async (next: Venue, announce: string) => {
+  // Who first shared each venue over the mesh ('local' for file imports); only they may update it.
+  const publishers = useRef<Record<string, string>>({})
+  useEffect(() => {
+    void storage.getSetting<Record<string, string>>('venuePublishers').then((saved) => {
+      if (saved) publishers.current = { ...saved, ...publishers.current }
+    })
+  }, [])
+
+  const installVenue = useCallback(async (next: Venue, announce: string, publisher: string) => {
+    publishers.current = { ...publishers.current, [next.id]: publisher }
+    await storage.setSetting('venuePublishers', publishers.current)
     await storage.saveVenue(next)
     setVenues((current) => [...current.filter((v) => v.id !== next.id), next])
     flash(announce)
@@ -136,17 +148,24 @@ export function App() {
     venuesRef.current = venues
   }, [venues])
   const onMeshVenue = useCallback(
-    (incoming: unknown) => {
+    (incoming: unknown, from: string) => {
+      let parsed: Venue
       try {
-        const parsed = parseVenue(incoming)
-        const existing = venuesRef.current.find((v) => v.id === parsed.id)
-        if (existing && existing.version >= parsed.version) return
-        void installVenue(parsed, `Received map "${parsed.name}" over the mesh`)
+        parsed = parseVenue(incoming)
       } catch {
-        // ignore invalid packages from peers
+        return // invalid packages from peers are ignored
       }
+      const existing = venuesRef.current.find((v) => v.id === parsed.id)
+      const decision = decideVenueUpdate(
+        parsed,
+        from,
+        existing && { version: existing.version, publisher: publishers.current[existing.id] ?? 'local' },
+        BUILT_IN_VENUES,
+      )
+      if (decision.accept) void installVenue(parsed, `Received map "${parsed.name}" over the mesh`, from)
+      else if (decision.reason === 'not-publisher') flash(`Ignored an update to "${parsed.name}" from a peer who didn't publish it`)
     },
-    [installVenue],
+    [installVenue, flash],
   )
   const mesh = useMesh(venue.id, onMeshVenue)
   const { node } = mesh
@@ -377,7 +396,8 @@ export function App() {
             type="button"
             className={level.id === levelId ? 'active' : ''}
             aria-pressed={level.id === levelId}
-            aria-label={level.name}
+            // The name starts with the visible label (WCAG 2.5.3), so "click 3" works for voice control.
+            aria-label={`${level.shortName} ${level.name}`}
             onClick={() => setLevelId(level.id)}
           >
             {level.shortName}
@@ -500,7 +520,7 @@ export function App() {
             void file.text().then((text) => {
               try {
                 const parsed = parseVenue(text)
-                void installVenue(parsed, `Imported "${parsed.name}"`).then(() => selectVenue(parsed.id))
+                void installVenue(parsed, `Imported "${parsed.name}"`, 'local').then(() => selectVenue(parsed.id))
               } catch (e) {
                 flash(e instanceof Error ? e.message : 'Invalid venue package')
               }

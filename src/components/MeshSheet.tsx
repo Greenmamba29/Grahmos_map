@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bluetooth, CheckCircle2, MessageSquare, MonitorSmartphone, Send, Share2, X } from 'lucide-react'
+import { Bluetooth, CheckCircle2, MessageSquare, MonitorSmartphone, Send, Share2, ShieldCheck, X } from 'lucide-react'
 import type { Level } from '../indoor/types'
 import type { MeshNode } from '../mesh/node'
 import type { AnnotationType } from '../mesh/protocol'
@@ -42,6 +42,7 @@ export function MeshSheet(props: MeshSheetProps) {
           <h2>Offline mesh</h2>
           <p className="muted">
             {peers.length} peer{peers.length === 1 ? '' : 's'} · {node.stats.received} received · {node.stats.relayed} relayed
+            {node.stats.forged > 0 && ` · ${node.stats.forged} forged blocked`}
           </p>
         </div>
         <button type="button" className="icon-button" aria-label="Close mesh panel" onClick={props.onClose}>
@@ -100,6 +101,10 @@ export function MeshSheet(props: MeshSheetProps) {
                   <small>
                     {levelName(a.levelId)} · {a.authorName} · {ago(a.createdAt)}
                   </small>
+                  <small className="provenance">
+                    <ShieldCheck size={12} aria-hidden="true" /> Signed by {a.author === node.peerId ? 'you' : a.authorName} ({a.author.slice(0, 6)})
+                    {node.trusted.has(a.author) && <span className="trusted-badge">Trusted</span>}
+                  </small>
                 </span>
               </button>
               <button type="button" className="icon-button" aria-label={`Mark ${label} resolved`} onClick={() => node.resolveAnnotation(a.id)}>
@@ -116,10 +121,23 @@ export function MeshSheet(props: MeshSheetProps) {
         {peers.map((p) => (
           <li key={p.peerId}>
             <span className="peer-dot" />
-            <span>
-              <strong>{p.name}</strong>
-              <small>{p.levelId ? levelName(p.levelId) : 'Location not shared'} · {ago(p.at)}</small>
+            <span className="peer-main">
+              <strong>
+                {p.name}
+                {node.trusted.has(p.peerId) && <span className="trusted-badge">Trusted</span>}
+              </strong>
+              <small>
+                {p.levelId ? levelName(p.levelId) : 'Location not shared'} · key {p.peerId.slice(0, 6)} · {ago(p.at)}
+              </small>
             </span>
+            <button
+              type="button"
+              className="secondary-action compact"
+              aria-pressed={node.trusted.has(p.peerId)}
+              onClick={() => node.setTrusted(p.peerId, !node.trusted.has(p.peerId))}
+            >
+              {node.trusted.has(p.peerId) ? 'Untrust' : 'Trust'}
+            </button>
           </li>
         ))}
       </ul>
@@ -158,7 +176,7 @@ export function MeshSheet(props: MeshSheetProps) {
         }}
       >
         <label>
-          Your callsign
+          Your callsign (key {node.peerId})
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
         </label>
         <button type="submit" className="secondary-action">Save</button>

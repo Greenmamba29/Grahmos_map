@@ -1,13 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
 import './styles.css'
 import { App } from './app/App'
+import { registerServiceWorker } from './platform/pwa'
 
-registerSW({
-  immediate: true,
-  onOfflineReady: () => window.dispatchEvent(new Event('grahmos:offline-ready')),
-})
+registerServiceWorker()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
