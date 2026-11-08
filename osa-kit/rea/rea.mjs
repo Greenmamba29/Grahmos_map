@@ -83,14 +83,16 @@ if (cmd === "seams") {
   const r = runParity(["--fixtures", opt("fixtures"), "--ref", opt("ref"), "--record", opt("out")]);
   process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.status ?? 1);
 } else if (cmd === "verify") {
-  const r = runParity(["--golden", opt("golden"), "--port", opt("port")]);
+  const tol = opt("tolerance") ? ["--tolerance", opt("tolerance")] : [];
+  const r = runParity(["--golden", opt("golden"), "--port", opt("port"), ...tol]);
   process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.status ?? 1);
 } else if (cmd === "control") {
   const golden = opt("golden"), port = opt("port"), mutant = opt("mutant");
   if (!golden || !port || !mutant) { console.error("usage: rea.mjs control --golden g --port cmd --mutant cmd"); process.exit(2); }
-  const p = runParity(["--golden", golden, "--port", port]);
+  const tol = opt("tolerance") ? ["--tolerance", opt("tolerance")] : [];
+  const p = runParity(["--golden", golden, "--port", port, ...tol]);
   if (p.status !== 0) { console.log(`control: RED — port diverges from the golden\n${p.stdout}${p.stderr}`); process.exit(1); }
-  const m = runParity(["--golden", golden, "--port", mutant]);
+  const m = runParity(["--golden", golden, "--port", mutant, ...tol]);
   if (m.status === 0) { console.log("control: RED — mutant survived: the golden cannot tell a wrong implementation from the port. Add fixtures that exercise the mutated path."); process.exit(1); }
   console.log("control: GREEN — port matches the golden and the mutant is caught");
 } else {

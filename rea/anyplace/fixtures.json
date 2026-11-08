@@ -1,0 +1,2487 @@
+[
+ {
+  "name": "floor 0 raw scan 0 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -94
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -71
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -90
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 0 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -94
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -71
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -90
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 0 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -94
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -71
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -90
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 0 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -94
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -71
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -90
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 1 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -96
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -92
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -92
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -76
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -97
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -91
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -94
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 1 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -96
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -92
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -92
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -76
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -97
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -91
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -94
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 1 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -96
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -92
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -92
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -76
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -97
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -91
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -94
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 1 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -96
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -92
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -92
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -76
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -97
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -91
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -94
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 2 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -96
+    },
+    {
+     "bssid": "00:3a:98:2a:65:82",
+     "rss": -91
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -90
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -91
+    },
+    {
+     "bssid": "d4:d7:48:b0:8f:40",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 2 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -96
+    },
+    {
+     "bssid": "00:3a:98:2a:65:82",
+     "rss": -91
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -90
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -91
+    },
+    {
+     "bssid": "d4:d7:48:b0:8f:40",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 2 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -96
+    },
+    {
+     "bssid": "00:3a:98:2a:65:82",
+     "rss": -91
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -90
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -91
+    },
+    {
+     "bssid": "d4:d7:48:b0:8f:40",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 2 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -96
+    },
+    {
+     "bssid": "00:3a:98:2a:65:82",
+     "rss": -91
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -90
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -91
+    },
+    {
+     "bssid": "d4:d7:48:b0:8f:40",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 3 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -84
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -90
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -83
+    },
+    {
+     "bssid": "d4:d7:48:b0:95:f0",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -86
+    },
+    {
+     "bssid": "d4:d7:48:d8:2c:70",
+     "rss": -86
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -76
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -69
+    },
+    {
+     "bssid": "d4:d7:48:d8:2e:70",
+     "rss": -78
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:70",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:71",
+     "rss": -94
+    },
+    {
+     "bssid": "10:40:f3:9f:06:cc",
+     "rss": -82
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 3 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -84
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -90
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -83
+    },
+    {
+     "bssid": "d4:d7:48:b0:95:f0",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -86
+    },
+    {
+     "bssid": "d4:d7:48:d8:2c:70",
+     "rss": -86
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -76
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -69
+    },
+    {
+     "bssid": "d4:d7:48:d8:2e:70",
+     "rss": -78
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:70",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:71",
+     "rss": -94
+    },
+    {
+     "bssid": "10:40:f3:9f:06:cc",
+     "rss": -82
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 3 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -84
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -90
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -83
+    },
+    {
+     "bssid": "d4:d7:48:b0:95:f0",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -86
+    },
+    {
+     "bssid": "d4:d7:48:d8:2c:70",
+     "rss": -86
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -76
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -69
+    },
+    {
+     "bssid": "d4:d7:48:d8:2e:70",
+     "rss": -78
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:70",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:71",
+     "rss": -94
+    },
+    {
+     "bssid": "10:40:f3:9f:06:cc",
+     "rss": -82
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 3 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -90
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -92
+    },
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -84
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -90
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -83
+    },
+    {
+     "bssid": "d4:d7:48:b0:95:f0",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -86
+    },
+    {
+     "bssid": "d4:d7:48:d8:2c:70",
+     "rss": -86
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -76
+    },
+    {
+     "bssid": "04:a1:51:a3:13:25",
+     "rss": -69
+    },
+    {
+     "bssid": "d4:d7:48:d8:2e:70",
+     "rss": -78
+    },
+    {
+     "bssid": "d4:d7:48:d8:2b:00",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:70",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1f:6c:a9:1b:71",
+     "rss": -94
+    },
+    {
+     "bssid": "10:40:f3:9f:06:cc",
+     "rss": -82
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 4 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -84
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -85
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -81
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -81
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -96
+    },
+    {
+     "bssid": "00:1d:45:51:38:a0",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 4 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -84
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -85
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -81
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -81
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -96
+    },
+    {
+     "bssid": "00:1d:45:51:38:a0",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 4 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -84
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -85
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -81
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -81
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -96
+    },
+    {
+     "bssid": "00:1d:45:51:38:a0",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 4 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -84
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -85
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -81
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -81
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -96
+    },
+    {
+     "bssid": "00:1d:45:51:38:a0",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 5 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 5 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 5 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 5 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -96
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 6 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:e8",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:56",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -88
+    },
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -82
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -87
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1d:45:51:38:a2",
+     "rss": -82
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:a2",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:02",
+     "rss": -92
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 6 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:e8",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:56",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -88
+    },
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -82
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -87
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1d:45:51:38:a2",
+     "rss": -82
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:a2",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:02",
+     "rss": -92
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 6 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:e8",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:56",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -88
+    },
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -82
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -87
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1d:45:51:38:a2",
+     "rss": -82
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:a2",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:02",
+     "rss": -92
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 6 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:e8",
+     "rss": -94
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:56",
+     "rss": -91
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -88
+    },
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -82
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -87
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:11",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:81",
+     "rss": -85
+    },
+    {
+     "bssid": "00:1d:45:51:38:a2",
+     "rss": -82
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:a2",
+     "rss": -95
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:02",
+     "rss": -92
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 7 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -80
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:16:b6:ee:00:7f",
+     "rss": -93
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 7 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -80
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:16:b6:ee:00:7f",
+     "rss": -93
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 7 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -80
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:16:b6:ee:00:7f",
+     "rss": -93
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 7 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "d4:d7:48:d8:28:b0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:e8:a0",
+     "rss": -91
+    },
+    {
+     "bssid": "24:b6:57:7b:ee:d0",
+     "rss": -80
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -90
+    },
+    {
+     "bssid": "00:16:b6:ee:00:7f",
+     "rss": -93
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:d6",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 8 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 8 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 8 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 8 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -75
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -87
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 9 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f1",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -89
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -87
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -90
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:7f",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1d:45:51:38:a1",
+     "rss": -88
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 9 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f1",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -89
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -87
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -90
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:7f",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1d:45:51:38:a1",
+     "rss": -88
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 9 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f1",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -89
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -87
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -90
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:7f",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1d:45:51:38:a1",
+     "rss": -88
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 9 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:3a:98:2a:65:31",
+     "rss": -86
+    },
+    {
+     "bssid": "00:3a:98:2a:65:30",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f1",
+     "rss": -86
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:10",
+     "rss": -89
+    },
+    {
+     "bssid": "00:1f:6c:a8:e9:12",
+     "rss": -87
+    },
+    {
+     "bssid": "00:0e:84:4b:0a:f8",
+     "rss": -90
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:7f",
+     "rss": -94
+    },
+    {
+     "bssid": "00:1d:45:51:38:a1",
+     "rss": -88
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 10 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -77
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 10 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -77
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 10 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -77
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 10 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -77
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -93
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 11 algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -55
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -89
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 11 algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -55
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -89
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 11 algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -55
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -89
+    }
+   ]
+  }
+ },
+ {
+  "name": "floor 0 raw scan 11 algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "24:b6:57:ae:40:30",
+     "rss": -55
+    },
+    {
+     "bssid": "d4:d7:48:b0:97:10",
+     "rss": -69
+    },
+    {
+     "bssid": "00:0b:fd:f3:ab:0b",
+     "rss": -89
+    }
+   ]
+  }
+ },
+ {
+  "name": "top-3 APs only, algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    }
+   ]
+  }
+ },
+ {
+  "name": "no known APs, algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "ff:ff:ff:ff:ff:ff",
+     "rss": -40
+    }
+   ]
+  }
+ },
+ {
+  "name": "empty scan, algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": []
+  }
+ },
+ {
+  "name": "floor 2 map with floor 0 scan, algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/2/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -74
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -88
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -47
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -61
+    }
+   ]
+  }
+ },
+ {
+  "name": "duplicate bssid in scan (first wins), algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -30
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:ec",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0c:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "uppercase bssid does not match, algorithm 1",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "00:0B:FD:4A:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EB",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0E:38:7A:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EC",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0E:84:4B:0C:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:B6:57:B4:F6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "top-3 APs only, algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    }
+   ]
+  }
+ },
+ {
+  "name": "no known APs, algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "ff:ff:ff:ff:ff:ff",
+     "rss": -40
+    }
+   ]
+  }
+ },
+ {
+  "name": "empty scan, algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": []
+  }
+ },
+ {
+  "name": "floor 2 map with floor 0 scan, algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/2/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -74
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -88
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -47
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -61
+    }
+   ]
+  }
+ },
+ {
+  "name": "duplicate bssid in scan (first wins), algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -30
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:ec",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0c:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "uppercase bssid does not match, algorithm 2",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "00:0B:FD:4A:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EB",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0E:38:7A:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EC",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0E:84:4B:0C:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:B6:57:B4:F6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "top-3 APs only, algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    }
+   ]
+  }
+ },
+ {
+  "name": "no known APs, algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "ff:ff:ff:ff:ff:ff",
+     "rss": -40
+    }
+   ]
+  }
+ },
+ {
+  "name": "empty scan, algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": []
+  }
+ },
+ {
+  "name": "floor 2 map with floor 0 scan, algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/2/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -74
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -88
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -47
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -61
+    }
+   ]
+  }
+ },
+ {
+  "name": "duplicate bssid in scan (first wins), algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -30
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:ec",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0c:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "uppercase bssid does not match, algorithm 3",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "00:0B:FD:4A:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EB",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0E:38:7A:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EC",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0E:84:4B:0C:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:B6:57:B4:F6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "top-3 APs only, algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    }
+   ]
+  }
+ },
+ {
+  "name": "no known APs, algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "ff:ff:ff:ff:ff:ff",
+     "rss": -40
+    }
+   ]
+  }
+ },
+ {
+  "name": "empty scan, algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": []
+  }
+ },
+ {
+  "name": "floor 2 map with floor 0 scan, algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/2/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -74
+    },
+    {
+     "bssid": "d4:d7:48:b0:8d:20",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ab",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:ce",
+     "rss": -88
+    },
+    {
+     "bssid": "24:b6:57:7b:e9:60",
+     "rss": -89
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -47
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:b2",
+     "rss": -61
+    }
+   ]
+  }
+ },
+ {
+  "name": "duplicate bssid in scan (first wins), algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -30
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:ec",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0e:84:4b:0c:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:b6:57:b4:f6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "uppercase bssid does not match, algorithm 4",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "00:0B:FD:4A:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EB",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0E:38:7A:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0E:84:4B:0B:EC",
+     "rss": -83
+    },
+    {
+     "bssid": "00:0E:84:4B:0C:05",
+     "rss": -83
+    },
+    {
+     "bssid": "24:B6:57:B4:F6:20",
+     "rss": -84
+    }
+   ]
+  }
+ },
+ {
+  "name": "unknown algorithm 5",
+  "input": {
+   "radiomap": "CSUCY/0/indoor-radiomap-mean.txt",
+   "algorithm": 5,
+   "scan": [
+    {
+     "bssid": "00:0b:fd:4a:71:94",
+     "rss": -50
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:eb",
+     "rss": -64
+    },
+    {
+     "bssid": "00:0e:38:7a:37:77",
+     "rss": -79
+    },
+    {
+     "bssid": "00:0e:84:4b:0b:ec",
+     "rss": -83
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: identical fingerprints, iteration order decides, algorithm 1",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -60
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -70
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:03",
+     "rss": -80
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: second fingerprint group, algorithm 1",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 1,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -61
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -72
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: identical fingerprints, iteration order decides, algorithm 2",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -60
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -70
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:03",
+     "rss": -80
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: second fingerprint group, algorithm 2",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 2,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -61
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -72
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: identical fingerprints, iteration order decides, algorithm 3",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -60
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -70
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:03",
+     "rss": -80
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: second fingerprint group, algorithm 3",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 3,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -61
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -72
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: identical fingerprints, iteration order decides, algorithm 4",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -60
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -70
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:03",
+     "rss": -80
+    }
+   ]
+  }
+ },
+ {
+  "name": "ties: second fingerprint group, algorithm 4",
+  "input": {
+   "radiomap": "rea/anyplace/data/ties.txt",
+   "algorithm": 4,
+   "scan": [
+    {
+     "bssid": "aa:aa:aa:aa:aa:01",
+     "rss": -61
+    },
+    {
+     "bssid": "aa:aa:aa:aa:aa:02",
+     "rss": -72
+    }
+   ]
+  }
+ }
+]

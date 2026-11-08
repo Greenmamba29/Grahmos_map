@@ -16,6 +16,9 @@ jobs:
   characterize:
     runs-on: macos-15
     timeout-minutes: 30
+    # Writes the recorded golden back to the branch (a GITHUB_TOKEN push does not re-trigger workflows).
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,13 +32,25 @@ jobs:
         run: |
           node osa-kit/rea/rea.mjs characterize --fixtures rea/bitchat/fixtures.json \
             --ref "$PWD/rea/bitchat/runner/.build/release/bitchat-ref" --out rea/bitchat/golden.json
-          echo "===GOLDEN-BEGIN==="
-          gzip -9c rea/bitchat/golden.json | base64
-          echo "===GOLDEN-END==="
+          shasum -a 256 rea/bitchat/golden.json
       - name: Verify the committed TypeScript port against the fresh golden
         run: |
           npm ci
           node osa-kit/rea/rea.mjs verify --golden rea/bitchat/golden.json --port "node --experimental-strip-types rea/bitchat/port-cli.ts"
+      - name: Negative control (a mutant port must fail the golden)
+        run: |
+          node osa-kit/rea/rea.mjs control --golden rea/bitchat/golden.json \
+            --port "node --experimental-strip-types rea/bitchat/port-cli.ts" \
+            --mutant "node --experimental-strip-types rea/bitchat/port-cli.ts --mutant"
+      - name: Commit the golden recorded from upstream
+        if: github.ref_type == 'branch'
+        env: { BRANCH: "${{ github.ref_name }}" }
+        run: |
+          git add rea/bitchat/golden.json
+          if git diff --cached --quiet; then echo "golden unchanged"; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "rea(bitchat): record golden from unmodified upstream (CI ${GITHUB_RUN_ID})"
+          git push origin "HEAD:$BRANCH"
       - uses: actions/upload-artifact@v4
         if: always()
         continue-on-error: true
