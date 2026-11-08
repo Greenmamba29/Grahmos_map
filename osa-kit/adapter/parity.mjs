@@ -41,6 +41,14 @@ else {
   const fixtures = JSON.parse(readFileSync(opt("fixtures"), "utf8"));
   if (!opt("ref")) { console.error("--ref <cmd> (original) or --golden <file> required"); process.exit(2); }
   cases = fixtures.map((f) => ({ ...f, expected: exec(opt("ref"), f.input) }));
+  // A reference that crashed recorded nothing about upstream: refuse, or verify fails forever and looks
+  // like a port bug. Upstream behaviour that is an error must be printed as a JSON value by the runner.
+  const broken = cases.filter((c) => c.expected.error);
+  if (broken.length) {
+    console.error(`reference failed on ${broken.length}/${cases.length} fixtures; no golden written. Make the runner print upstream errors as JSON values:`);
+    for (const c of broken.slice(0, 10)) console.error(`  ${c.name}: ${c.expected.error}`);
+    process.exit(1);
+  }
   if (opt("record")) { mkdirSync(dirname(opt("record")), { recursive: true }); writeFileSync(opt("record"), JSON.stringify(cases, null, 2)); console.log(`recorded ${cases.length} reference outputs -> ${opt("record")}`); if (!opt("port")) process.exit(0); }
 }
 if (!opt("port")) { console.error("--port <cmd> required"); process.exit(2); }

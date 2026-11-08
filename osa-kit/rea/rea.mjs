@@ -3,8 +3,8 @@
 //
 //   node osa-kit/rea/rea.mjs seams <repo>                 inventory outside-observable seams + classify the repo
 //   node osa-kit/rea/rea.mjs characterize --fixtures f.json --ref "<upstream cmd>" --out golden.json
-//   node osa-kit/rea/rea.mjs verify  --golden g.json --port "<port cmd>"
-//   node osa-kit/rea/rea.mjs control --golden g.json --port "<port cmd>" --mutant "<deliberately wrong cmd>"
+//   node osa-kit/rea/rea.mjs verify  --golden g.json --port "<port cmd>" [--tolerance 1e-13]
+//   node osa-kit/rea/rea.mjs control --golden g.json --port "<port cmd>" --mutant "<deliberately wrong cmd>" [--tolerance 1e-13]
 //
 // characterize/verify delegate to osa-kit/adapter/parity.mjs (same stdin/stdout protocol).
 // control is the negative control the kit already demands of every new test: the golden must pass the port
@@ -54,6 +54,17 @@ function seams(repo) {
   const plugins = files.filter((f) => /(^|\/)(\.claude-plugin|\.cursor-plugin|\.codex-plugin)\/(plugin|marketplace)\.json$/.test(f));
   const docker = files.filter((f) => /(^|\/)(Dockerfile[^/]*|docker-compose[^/]*\.ya?ml|compose\.ya?ml)$/.test(f));
   const native = files.filter((f) => /\.(c|cc|cpp|h|hpp)$/.test(f)).length;
+  // Source in a general-purpose language. Without a CLI/API/container surface such a repo is a library,
+  // REA'd at its pure-function seams; only C/C++ with no surface stays "native" (park unless CI has the toolchain).
+  const LANG = { swift: "swift", kt: "kotlin", kts: "kotlin", java: "java", scala: "scala", go: "go", rs: "rust",
+    js: "js", mjs: "js", cjs: "js", ts: "ts", tsx: "ts", jsx: "js", py: "python", cs: "csharp", rb: "ruby", php: "php", dart: "dart" };
+  const sourceFiles = {};
+  for (const f of files) {
+    if (/\.min\.js$|\.d\.ts$/.test(f)) continue;
+    const lang = LANG[f.split(".").pop()];
+    if (lang) sourceFiles[lang] = (sourceFiles[lang] ?? 0) + 1;
+  }
+  const source = Object.values(sourceFiles).reduce((a, b) => a + b, 0);
   // Agents and hooks run with the user's permissions without a slash command; a root CLAUDE.md plus
   // .claude/settings.json makes the repo a project template (installs as its own repo, not into a workspace).
   const agents = files.filter((f) => /(^|\/)\.claude\/agents\/[^/]+\.md$/.test(f));
@@ -67,10 +78,12 @@ function seams(repo) {
   }
   const template = files.includes("CLAUDE.md") && files.includes(".claude/settings.json");
   const app = cli.length > 0 || openapi.length > 0 || docker.length > 0;
-  const kind = skills.length && app ? "skill+app" : skills.length || plugins.length ? "skill" : app ? "app" : native ? "native" : "data";
-  return { repo, kind, template, cli, openapi, skills, agents, hooks, mcp, plugins, docker, nativeSourceFiles: native };
+  const kind = skills.length && app ? "skill+app" : skills.length || plugins.length ? "skill" : app ? "app" : source ? "library" : native ? "native" : "data";
+  return { repo, kind, template, cli, openapi, skills, agents, hooks, mcp, plugins, docker, sourceFiles, nativeSourceFiles: native };
 }
 
+// Floats from different runtimes can differ in the last ulp (HotSpot Math.exp vs V8): forward --tolerance.
+const tol = opt("tolerance") ? ["--tolerance", opt("tolerance")] : [];
 function runParity(args) {
   return spawnSync("node", [parity, ...args], { encoding: "utf8" });
 }
@@ -83,13 +96,11 @@ if (cmd === "seams") {
   const r = runParity(["--fixtures", opt("fixtures"), "--ref", opt("ref"), "--record", opt("out")]);
   process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.status ?? 1);
 } else if (cmd === "verify") {
-  const tol = opt("tolerance") ? ["--tolerance", opt("tolerance")] : [];
   const r = runParity(["--golden", opt("golden"), "--port", opt("port"), ...tol]);
   process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.status ?? 1);
 } else if (cmd === "control") {
   const golden = opt("golden"), port = opt("port"), mutant = opt("mutant");
   if (!golden || !port || !mutant) { console.error("usage: rea.mjs control --golden g --port cmd --mutant cmd"); process.exit(2); }
-  const tol = opt("tolerance") ? ["--tolerance", opt("tolerance")] : [];
   const p = runParity(["--golden", golden, "--port", port, ...tol]);
   if (p.status !== 0) { console.log(`control: RED — port diverges from the golden\n${p.stdout}${p.stderr}`); process.exit(1); }
   const m = runParity(["--golden", golden, "--port", mutant, ...tol]);
