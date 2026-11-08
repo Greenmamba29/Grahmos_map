@@ -1,5 +1,5 @@
 import type { Point } from '../indoor/types'
-import type { Digest, LwwEntry } from './crdt'
+import type { LwwEntry } from './crdt'
 
 export const MESH_PROTOCOL_VERSION = 1
 
@@ -37,11 +37,17 @@ export type MeshBody =
   | { kind: 'hello'; name: string; venueId?: string }
   | { kind: 'presence'; presence: PeerPresence }
   | { kind: 'ops'; entries: SignedEntry[] }
-  | { kind: 'digest'; venueId: string; digest: Digest; reply?: boolean }
+  /**
+   * Anti-entropy summary: a Golomb-coded set (bitchat's GCSFilter, ported in ./bitchat/gcs.ts) of salted
+   * entry ids — about P+2 bits per entry instead of the full {key: hlc} map.
+   */
+  | { kind: 'digest'; venueId: string; gcs: GcsDigest; reply?: boolean }
   | { kind: 'venue-offer'; venueId: string; version: number; name: string; bytes: number }
   | { kind: 'venue-request'; venueId: string }
   | { kind: 'venue'; venue: unknown }
   | { kind: 'text'; text: string }
+  /** WebRTC signalling for a direct link, addressed to one peer and flooded like any other message. */
+  | { kind: 'rtc'; to: string; signal: { type: 'offer' | 'answer' | 'candidate'; sdp?: string; candidate?: unknown } }
 
 /**
  * A CRDT entry signed by whoever wrote this version. The HLC's node must be the signer's peer id, and a
@@ -52,6 +58,17 @@ export interface SignedEntry extends LwwEntry<Annotation> {
   pub: string
   /** Signature over canonical({ key, value, hlc }), hex. */
   sig: string
+}
+
+export interface GcsDigest {
+  p: number
+  m: number
+  /** Golomb-Rice bitstream, hex. */
+  data: string
+  /** Per-digest random salt, hex: a false positive can't hide the same entry round after round. */
+  salt: string
+  /** Entries the filter covers (the sender may have trimmed to fit the byte budget). */
+  count: number
 }
 
 export interface MeshEnvelope {

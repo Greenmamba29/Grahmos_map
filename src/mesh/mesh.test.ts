@@ -261,3 +261,49 @@ describe('signed mesh (Ed25519)', () => {
     expect(meshNode('b').peerId).not.toBe(a.peerId)
   })
 })
+
+describe('GCS anti-entropy (bitchat GCSFilter, salted per digest)', () => {
+  it('converges 300 partitioned reports while each digest stays under 400 bytes of filter', async () => {
+    const a = meshNode('gcs-a')
+    const b = meshNode('gcs-b')
+    for (let i = 0; i < 150; i++) a.publishAnnotation(annotation(a, `a${i}`, `note ${i}`, { type: 'note' }))
+    for (let i = 0; i < 150; i++) b.publishAnnotation(annotation(b, `b${i}`, `note ${i}`, { type: 'note' }))
+    const [l, r] = MemoryTransport.pair('gcs-l', 'gcs-r')
+    const sizes: number[] = []
+    const send = l.send.bind(l)
+    l.send = (frame: string) => {
+      const env = decodeEnvelope(frame)
+      if (env?.body.kind === 'digest') sizes.push(env.body.gcs.data.length / 2)
+      send(frame)
+    }
+    a.addTransport(l)
+    b.addTransport(r)
+    await r.start()
+    await l.start()
+    for (let round = 0; round < 5 && (a.activeAnnotations().length < 300 || b.activeAnnotations().length < 300); round++) {
+      a.sync()
+      b.sync()
+    }
+    expect(a.activeAnnotations()).toHaveLength(300)
+    expect(b.activeAnnotations()).toHaveLength(300)
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(400)
+  })
+
+  it('quirk "GCS ids are unsalted" (bitchat): GrahmOS salts each digest so a false positive cannot repeat', async () => {
+    // Two digests of the same state use different salts, hence different bitstreams.
+    const a = meshNode('salt-a')
+    a.publishAnnotation(annotation(a, 'x', 'x'))
+    const [l, r] = MemoryTransport.pair('salt-l', 'salt-r')
+    const digests: string[] = []
+    r.onFrame = (f) => {
+      const env = decodeEnvelope(f)
+      if (env?.body.kind === 'digest') digests.push(`${env.body.gcs.salt}:${env.body.gcs.data}`)
+    }
+    a.addTransport(l)
+    await r.start()
+    await l.start()
+    a.sync()
+    expect(digests.length).toBeGreaterThanOrEqual(2)
+    expect(new Set(digests).size).toBe(digests.length)
+  })
+})

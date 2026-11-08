@@ -1,4 +1,4 @@
-import { ChunkAssembler, chunkFrame } from '../protocol'
+import { BitchatLinkCodec } from '../bitchat/link'
 import { MeshTransport } from '../transport'
 
 /**
@@ -19,8 +19,8 @@ export interface BluetoothRelayOptions {
 }
 
 /**
- * Connects the browser (as BLE central) to a nearby relay node that speaks
- * the GrahmOS chunked frame protocol over Nordic UART. The relay rebroadcasts
+ * Connects the browser (as BLE central) to a nearby relay node over Nordic UART. Frames travel as bitchat
+ * packets (see ../bitchat/link.ts): compressed, and fragmented to the packet budget. The relay rebroadcasts
  * frames over its own radio fabric (BLE advertising, ESP-NOW, LoRa) and back
  * to every other connected phone, extending the mesh beyond Wi-Fi.
  */
@@ -30,8 +30,7 @@ export class BluetoothRelayTransport extends MeshTransport {
   private device: BluetoothDevice | null = null
   private rx: BluetoothRemoteGATTCharacteristic | null = null
   private tx: BluetoothRemoteGATTCharacteristic | null = null
-  private readonly assembler = new ChunkAssembler()
-  private seq = Math.floor(Math.random() * 0xffff)
+  private readonly codec: BitchatLinkCodec
   private queue: Promise<void> = Promise.resolve()
   private readonly packetBytes: number
   private manualStop = false
@@ -40,6 +39,7 @@ export class BluetoothRelayTransport extends MeshTransport {
     super()
     this.id = `ble-${Math.random().toString(36).slice(2, 8)}`
     this.packetBytes = options.packetBytes ?? 180
+    this.codec = new BitchatLinkCodec(this.packetBytes)
   }
 
   static isSupported() {
@@ -82,7 +82,7 @@ export class BluetoothRelayTransport extends MeshTransport {
   private readonly handleNotify = (event: Event) => {
     const value = (event.target as BluetoothRemoteGATTCharacteristic).value
     if (!value) return
-    const frame = this.assembler.push(new Uint8Array(value.buffer, value.byteOffset, value.byteLength))
+    const frame = this.codec.push(new Uint8Array(value.buffer, value.byteOffset, value.byteLength))
     if (frame) this.onFrame(frame)
   }
 
@@ -120,14 +120,20 @@ export class BluetoothRelayTransport extends MeshTransport {
   send(frame: string) {
     const rx = this.rx
     if (!rx) return
-    this.seq = (this.seq + 1) & 0xffff
-    const packets = chunkFrame(frame, this.seq, this.packetBytes)
+    let packets: Uint8Array[]
+    try {
+      packets = this.codec.encode(frame)
+    } catch (error) {
+      this.detail = error instanceof Error ? error.message : String(error)
+      return
+    }
     // GATT allows one operation at a time; serialise writes.
     this.queue = this.queue
       .then(async () => {
         for (const packet of packets) {
-          if (rx.writeValueWithoutResponse) await rx.writeValueWithoutResponse(packet)
-          else await rx.writeValue(packet)
+          const bytes = packet as Uint8Array<ArrayBuffer>
+          if (rx.writeValueWithoutResponse) await rx.writeValueWithoutResponse(bytes)
+          else await rx.writeValue(bytes)
         }
       })
       .catch((error) => this.setStatus('error', error instanceof Error ? error.message : String(error)))

@@ -6,6 +6,7 @@ import { BroadcastChannelTransport } from '../mesh/transports/broadcastChannel'
 import { BleClient } from '@capacitor-community/bluetooth-le'
 import { BluetoothRelayTransport } from '../mesh/transports/bluetoothGatt'
 import { NativeBluetoothRelayTransport } from '../mesh/transports/nativeRelay'
+import { RtcLinkManager } from '../mesh/transports/webrtc'
 import { storage } from '../lib/storage'
 
 export interface Identity {
@@ -103,10 +104,16 @@ export function useMesh(venueId: string, onVenue: (venue: unknown, from: string)
     const tabs = new BroadcastChannelTransport()
     node.addTransport(tabs)
     void tabs.start()
-    const interval = setInterval(() => node.sync(), 15_000)
+    // Upgrade neighbours to direct WebRTC links (fast LAN path for venue maps); signalling rides the mesh.
+    const rtc = typeof RTCPeerConnection === 'undefined' ? null : new RtcLinkManager(node)
+    const interval = setInterval(() => {
+      node.sync()
+      rtc?.connectAll()
+    }, 15_000)
     return () => {
       cancelled = true
       clearInterval(interval)
+      rtc?.close()
       node.removeTransport(tabs)
     }
   }, [node])

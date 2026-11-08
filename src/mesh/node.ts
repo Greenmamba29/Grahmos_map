@@ -1,6 +1,8 @@
 import { LwwMap } from './crdt'
 import { HybridLogicalClock, decodeHlc } from './hlc'
-import { peerIdFor, signPayload, verifyPayload, type DeviceKey } from './identity'
+import { fromHex, peerIdFor, signPayload, toHex, verifyPayload, type DeviceKey } from './identity'
+import { buildFilter, bucket, contains, decodeToSortedSet } from './bitchat/gcs'
+import { sha256 } from '@noble/hashes/sha2.js'
 import {
   MESH_PROTOCOL_VERSION,
   decodeEnvelope,
@@ -11,6 +13,7 @@ import {
   type MeshBody,
   type MeshEnvelope,
   type PeerPresence,
+  type GcsDigest,
   type SignedEntry,
 } from './protocol'
 import type { MeshTransport } from './transport'
@@ -50,6 +53,16 @@ export interface MeshMessage {
 const MAX_FRAME_CHARS = 512 * 1024
 const SEEN_TTL_MS = 10 * 60 * 1000
 const PRESENCE_TTL_MS = 90 * 1000
+/** Same budget and false-positive rate bitchat uses for REQUEST_SYNC filters. */
+const GCS_MAX_BYTES = 400
+const GCS_FPR = 0.01
+const OPS_PER_FRAME = 20
+const encoder = new TextEncoder()
+
+/** 16-byte id of one entry VERSION under a salt (bitchat ids are unsalted; see digestFor). */
+function syncId(salt: string, e: SignedEntry) {
+  return sha256(encoder.encode(`${salt}|${e.key}|${e.hlc}`)).slice(0, 16)
+}
 
 /**
  * Store-and-forward flooding mesh node with CRDT anti-entropy.
@@ -72,6 +85,8 @@ export class MeshNode {
   readonly trusted: Set<string>
   readonly messages: MeshMessage[] = []
   onVenue: (venue: unknown, from: string) => void = () => {}
+  /** Signals addressed to this node for a direct WebRTC link (see transports/webrtc.ts). */
+  onRtcSignal: (from: string, signal: Extract<MeshBody, { kind: 'rtc' }>['signal']) => void = () => {}
 
   private readonly peers = new Map<string, PeerPresence>()
   private readonly seen = new Map<string, number>()
@@ -253,6 +268,11 @@ export class MeshNode {
     this.emit()
   }
 
+  /** Sends a WebRTC signal to one peer over whatever links exist (signed, flooded, small TTL). */
+  sendRtcSignal(to: string, signal: Extract<MeshBody, { kind: 'rtc' }>['signal']) {
+    this.broadcast(this.envelope({ kind: 'rtc', to, signal }, 3))
+  }
+
   shareVenue(venue: unknown) {
     this.broadcast(this.envelope({ kind: 'venue', venue }, 2))
   }
@@ -272,16 +292,20 @@ export class MeshNode {
     this.sendOn(transport, this.envelope(this.hello(), 0))
     this.sendOn(
       transport,
-      this.envelope({ kind: 'digest', venueId: this.venueId ?? '*', digest: this.digestFor(this.venueId) }, 0),
+      this.envelope({ kind: 'digest', venueId: this.venueId ?? '*', gcs: this.digestFor(this.venueId) }, 0),
     )
   }
 
-  private digestFor(venueId?: string) {
-    const out: Record<string, string> = {}
-    for (const entry of this.annotations.all()) {
-      if (!venueId || venueId === '*' || entry.value.venueId === venueId) out[entry.key] = entry.hlc
-    }
-    return out
+  private entriesFor(venueId?: string) {
+    return this.annotations.all().filter((e) => !venueId || venueId === '*' || e.value.venueId === venueId)
+  }
+
+  /** GCS filter over salted ids of every entry version we hold (newest first, so trimming drops the oldest). */
+  private digestFor(venueId?: string): GcsDigest {
+    const salt = randomId(8)
+    const entries = this.entriesFor(venueId).sort((a, b) => (a.hlc < b.hlc ? 1 : -1))
+    const params = buildFilter(entries.map((e) => syncId(salt, e)), GCS_MAX_BYTES, GCS_FPR)
+    return { p: params.p, m: params.m, data: toHex(params.data), salt, count: params.includedCount }
   }
 
   private pruneSeen() {
@@ -365,20 +389,29 @@ export class MeshNode {
       }
       case 'digest': {
         if (!from) return false
-        const missing = this.annotations
-          .newerThan(body.digest ?? {})
-          .filter((e) => body.venueId === '*' || e.value.venueId === body.venueId)
-        if (missing.length) this.sendOn(from, this.envelope({ kind: 'ops', entries: missing }, 0))
-        if (!body.reply && this.annotations.remoteHasNewer(body.digest ?? {})) {
-          this.sendOn(
-            from,
-            this.envelope({ kind: 'digest', venueId: body.venueId, digest: this.digestFor(body.venueId), reply: true }, 0),
-          )
+        const gcs = body.gcs
+        if (!gcs || typeof gcs.salt !== 'string' || typeof gcs.data !== 'string') return false
+        let held: bigint[] = []
+        try {
+          held = decodeToSortedSet(gcs.p, gcs.m, fromHex(gcs.data))
+        } catch {
+          return false
+        }
+        const missing = this.entriesFor(body.venueId).filter((e) => !contains(held, bucket(syncId(gcs.salt, e), gcs.m)))
+        for (let i = 0; i < missing.length; i += OPS_PER_FRAME) {
+          this.sendOn(from, this.envelope({ kind: 'ops', entries: missing.slice(i, i + OPS_PER_FRAME) }, 0))
+        }
+        // A filter can't say what the sender has that we lack, so answer every first digest with our own.
+        if (!body.reply) {
+          this.sendOn(from, this.envelope({ kind: 'digest', venueId: body.venueId, gcs: this.digestFor(body.venueId), reply: true }, 0))
         }
         return false
       }
       case 'venue':
         this.onVenue(body.venue, envelope.origin)
+        return false
+      case 'rtc':
+        if (body.to === this.peerId) this.onRtcSignal(envelope.origin, body.signal)
         return false
       case 'text': {
         const name = this.peers.get(envelope.origin)?.name ?? envelope.origin.slice(0, 6)

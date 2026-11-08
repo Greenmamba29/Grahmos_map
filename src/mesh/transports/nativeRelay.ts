@@ -1,4 +1,4 @@
-import { ChunkAssembler, chunkFrame } from '../protocol'
+import { BitchatLinkCodec } from '../bitchat/link'
 import { MeshTransport } from '../transport'
 import { NUS_RX, NUS_SERVICE, NUS_TX } from './bluetoothGatt'
 
@@ -11,10 +11,11 @@ export interface NativeBleCentral {
   getMtu(deviceId: string): Promise<number>
   startNotifications(deviceId: string, service: string, characteristic: string, callback: (value: DataView) => void): Promise<void>
   writeWithoutResponse(deviceId: string, service: string, characteristic: string, value: DataView): Promise<void>
+  write(deviceId: string, service: string, characteristic: string, value: DataView): Promise<void>
 }
 
 /**
- * Same wire protocol as BluetoothRelayTransport (Nordic UART + chunked frames), driven through the
+ * Same wire protocol as BluetoothRelayTransport (Nordic UART + bitchat packets), driven through the
  * Capacitor BLE plugin so it works in the iOS and Android shells, where Web Bluetooth doesn't exist.
  * Uses the negotiated MTU for packet size and reconnects with backoff when the relay drops.
  */
@@ -22,8 +23,7 @@ export class NativeBluetoothRelayTransport extends MeshTransport {
   readonly id = `ble-native-${Math.random().toString(36).slice(2, 8)}`
   label = 'Bluetooth relay'
   private deviceId: string | null = null
-  private readonly assembler = new ChunkAssembler()
-  private seq = Math.floor(Math.random() * 0xffff)
+  private codec = new BitchatLinkCodec(20)
   private packetBytes = 20
   private queue: Promise<void> = Promise.resolve()
   private manualStop = false
@@ -59,8 +59,10 @@ export class NativeBluetoothRelayTransport extends MeshTransport {
     } catch {
       this.packetBytes = 20
     }
+    // bitchat fragments are at least 64 + 35 bytes; below that, packets go as long (with-response) writes.
+    this.codec = new BitchatLinkCodec(Math.max(this.packetBytes, 99))
     await this.ble.startNotifications(id, NUS_SERVICE, NUS_TX, (value) => {
-      const frame = this.assembler.push(new Uint8Array(value.buffer, value.byteOffset, value.byteLength))
+      const frame = this.codec.push(new Uint8Array(value.buffer, value.byteOffset, value.byteLength))
       if (frame) this.onFrame(frame)
     })
     this.setStatus('up')
@@ -97,12 +99,19 @@ export class NativeBluetoothRelayTransport extends MeshTransport {
   send(frame: string) {
     const id = this.deviceId
     if (!id || this.status !== 'up') return
-    this.seq = (this.seq + 1) & 0xffff
-    const packets = chunkFrame(frame, this.seq, this.packetBytes)
+    let packets: Uint8Array[]
+    try {
+      packets = this.codec.encode(frame)
+    } catch (error) {
+      this.detail = error instanceof Error ? error.message : String(error)
+      return
+    }
     this.queue = this.queue
       .then(async () => {
         for (const packet of packets) {
-          await this.ble.writeWithoutResponse(id, NUS_SERVICE, NUS_RX, new DataView(packet.buffer, packet.byteOffset, packet.byteLength))
+          const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength)
+          if (packet.length <= this.packetBytes) await this.ble.writeWithoutResponse(id, NUS_SERVICE, NUS_RX, view)
+          else await this.ble.write(id, NUS_SERVICE, NUS_RX, view)
         }
       })
       .catch((error) => this.setStatus('error', error instanceof Error ? error.message : String(error)))

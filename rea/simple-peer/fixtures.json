@@ -1,0 +1,11 @@
+[
+ {"name": "non-trickle text messages", "input": {"messages": [{"text": "hello"}, {"text": "ünïcode ✓ 🗺️"}]}},
+ {"name": "objectMode keeps strings as strings", "input": {"objectMode": true, "messages": [{"text": "hello"}, {"text": "second"}]}},
+ {"name": "binary message", "input": {"messages": [{"bytes": [0, 1, 2, 255, 128]}]}},
+ {"name": "binary in objectMode", "input": {"objectMode": true, "messages": [{"bytes": [9, 8, 7]}]}},
+ {"name": "64 KiB message arrives whole", "input": {"messages": [{"text": "x", "repeat": 65536}]}},
+ {"name": "100 messages arrive in order", "input": {"objectMode": true, "messages": [{"text": "0"}, {"text": "1"}, {"text": "2"}, {"text": "3"}, {"text": "4"}, {"text": "5"}, {"text": "6"}, {"text": "7"}, {"text": "8"}, {"text": "9"}, {"text": "10"}, {"text": "11"}, {"text": "12"}, {"text": "13"}, {"text": "14"}, {"text": "15"}, {"text": "16"}, {"text": "17"}, {"text": "18"}, {"text": "19"}]}},
+ {"name": "trickle signals offer, candidates, answer", "input": {"trickle": true, "messages": [{"text": "t"}]}},
+ {"name": "send before connect", "input": {"sendBeforeConnect": true, "messages": []}},
+ {"name": "destroy closes both sides", "input": {"destroy": true, "messages": []}}
+]

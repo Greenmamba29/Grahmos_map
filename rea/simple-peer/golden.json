@@ -1,0 +1,501 @@
+[
+  {
+    "name": "non-trickle text messages",
+    "input": {
+      "messages": [
+        {
+          "text": "hello"
+        },
+        {
+          "text": "ünïcode ✓ 🗺️"
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "bytes",
+              "bytes": [
+                104,
+                101,
+                108,
+                108,
+                111
+              ],
+              "length": 5,
+              "text": "hello"
+            },
+            {
+              "kind": "bytes",
+              "bytes": [
+                195,
+                188,
+                110,
+                195,
+                175,
+                99,
+                111,
+                100
+              ],
+              "length": 21,
+              "text": "ünïcode ✓ 🗺️"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "objectMode keeps strings as strings",
+    "input": {
+      "objectMode": true,
+      "messages": [
+        {
+          "text": "hello"
+        },
+        {
+          "text": "second"
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "string",
+              "text": "hello"
+            },
+            {
+              "kind": "string",
+              "text": "second"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "binary message",
+    "input": {
+      "messages": [
+        {
+          "bytes": [
+            0,
+            1,
+            2,
+            255,
+            128
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "bytes",
+              "bytes": [
+                0,
+                1,
+                2,
+                255,
+                128
+              ],
+              "length": 5,
+              "text": "\u0000\u0001\u0002��"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "binary in objectMode",
+    "input": {
+      "objectMode": true,
+      "messages": [
+        {
+          "bytes": [
+            9,
+            8,
+            7
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "bytes",
+              "bytes": [
+                9,
+                8,
+                7
+              ],
+              "length": 3,
+              "text": "\t\b\u0007"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "64 KiB message arrives whole",
+    "input": {
+      "messages": [
+        {
+          "text": "x",
+          "repeat": 65536
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "bytes",
+              "bytes": [
+                120,
+                120,
+                120,
+                120,
+                120,
+                120,
+                120,
+                120
+              ],
+              "length": 65536,
+              "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "100 messages arrive in order",
+    "input": {
+      "objectMode": true,
+      "messages": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4"
+        },
+        {
+          "text": "5"
+        },
+        {
+          "text": "6"
+        },
+        {
+          "text": "7"
+        },
+        {
+          "text": "8"
+        },
+        {
+          "text": "9"
+        },
+        {
+          "text": "10"
+        },
+        {
+          "text": "11"
+        },
+        {
+          "text": "12"
+        },
+        {
+          "text": "13"
+        },
+        {
+          "text": "14"
+        },
+        {
+          "text": "15"
+        },
+        {
+          "text": "16"
+        },
+        {
+          "text": "17"
+        },
+        {
+          "text": "18"
+        },
+        {
+          "text": "19"
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "string",
+              "text": "0"
+            },
+            {
+              "kind": "string",
+              "text": "1"
+            },
+            {
+              "kind": "string",
+              "text": "2"
+            },
+            {
+              "kind": "string",
+              "text": "3"
+            },
+            {
+              "kind": "string",
+              "text": "4"
+            },
+            {
+              "kind": "string",
+              "text": "5"
+            },
+            {
+              "kind": "string",
+              "text": "6"
+            },
+            {
+              "kind": "string",
+              "text": "7"
+            },
+            {
+              "kind": "string",
+              "text": "8"
+            },
+            {
+              "kind": "string",
+              "text": "9"
+            },
+            {
+              "kind": "string",
+              "text": "10"
+            },
+            {
+              "kind": "string",
+              "text": "11"
+            },
+            {
+              "kind": "string",
+              "text": "12"
+            },
+            {
+              "kind": "string",
+              "text": "13"
+            },
+            {
+              "kind": "string",
+              "text": "14"
+            },
+            {
+              "kind": "string",
+              "text": "15"
+            },
+            {
+              "kind": "string",
+              "text": "16"
+            },
+            {
+              "kind": "string",
+              "text": "17"
+            },
+            {
+              "kind": "string",
+              "text": "18"
+            },
+            {
+              "kind": "string",
+              "text": "19"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "trickle signals offer, candidates, answer",
+    "input": {
+      "trickle": true,
+      "messages": [
+        {
+          "text": "t"
+        }
+      ]
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer",
+            "candidate"
+          ],
+          "signals2": [
+            "answer",
+            "candidate"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [
+            {
+              "kind": "bytes",
+              "bytes": [
+                116
+              ],
+              "length": 1,
+              "text": "t"
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  },
+  {
+    "name": "send before connect",
+    "input": {
+      "sendBeforeConnect": true,
+      "messages": []
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:connect",
+            "p2:connect"
+          ],
+          "received": [],
+          "errors": [
+            "send-before-connect:11"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "destroy closes both sides",
+    "input": {
+      "destroy": true,
+      "messages": []
+    },
+    "expected": {
+      "value": {
+        "out": {
+          "signals1": [
+            "offer"
+          ],
+          "signals2": [
+            "answer"
+          ],
+          "events": [
+            "p1:close",
+            "p1:connect",
+            "p2:close",
+            "p2:connect"
+          ],
+          "received": [],
+          "errors": [
+            "p2:ERR_DATA_CHANNEL"
+          ]
+        }
+      }
+    }
+  }
+]

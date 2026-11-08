@@ -10,6 +10,12 @@ import { NativeBluetoothRelayTransport, type NativeBleCentral } from './nativeRe
 function relayBoard(mtu: number) {
   const phones = new Map<string, (v: DataView) => void>()
   const written: number[] = []
+  const longWrites: number[] = []
+  const relay = (me: string, value: DataView, long: boolean) => {
+    ;(long ? longWrites : written).push(value.byteLength)
+    const copy = new DataView(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength))
+    for (const [id, notify] of phones) if (id !== me) notify(copy)
+  }
   let n = 0
   const phone = (): NativeBleCentral => {
     const me = `phone-${n++}`
@@ -20,14 +26,11 @@ function relayBoard(mtu: number) {
       disconnect: async () => void phones.delete(me),
       getMtu: async () => mtu,
       startNotifications: async (_d, _s, _c, cb) => void phones.set(me, cb),
-      writeWithoutResponse: async (_d, _s, _c, value) => {
-        written.push(value.byteLength)
-        const copy = new DataView(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength))
-        for (const [id, notify] of phones) if (id !== me) notify(copy)
-      },
+      writeWithoutResponse: async (_d, _s, _c, value) => relay(me, value, false),
+      write: async (_d, _s, _c, value) => relay(me, value, true),
     }
   }
-  return { phone, written }
+  return { phone, written, longWrites }
 }
 
 const settle = () => new Promise((r) => setTimeout(r, 20))
@@ -53,13 +56,15 @@ describe('NativeBluetoothRelayTransport', () => {
     expect(board.written.length).toBeGreaterThan(2)
   })
 
-  it('falls back to 20-byte packets when the stack reports a tiny MTU', async () => {
+  it('uses long (with-response) writes when packets exceed a tiny MTU', async () => {
     const board = relayBoard(23)
     const a = new MeshNode({ key: generateKey(new Uint8Array(32).fill(3)), name: 'A', venueId: 'v' })
     const t = new NativeBluetoothRelayTransport(board.phone())
     a.addTransport(t)
     await t.start()
     await settle()
-    expect(Math.max(...board.written)).toBeLessThanOrEqual(20)
+    expect(board.written.every((n) => n <= 20)).toBe(true)
+    expect(board.longWrites.length).toBeGreaterThan(0)
+    expect(Math.max(...board.longWrites)).toBeLessThanOrEqual(99)
   })
 })
